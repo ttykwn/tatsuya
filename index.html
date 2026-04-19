@@ -244,6 +244,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .bt-flag { font-size: 0.95rem; flex-shrink: 0; }
 .bt-name { font-size: 0.72rem; flex: 1; line-height: 1.2; }
 .bt-empty { color: var(--muted); font-size: 0.7rem; font-style: italic; }
+.bt-badge { font-size: 0.62rem; font-weight: 700; margin-left: auto; flex-shrink: 0; }
 
 /* Final / Champion */
 .final-col {
@@ -950,7 +951,7 @@ function makeTeamSlot(team, mi, side) {
   return `<div class="bteam ${cls}" data-match="${mi}" data-side="${side}">
     <span class="bt-flag">${team.f}</span>
     <span class="bt-name">${team.n}</span>
-    ${pick === side ? '<span class="wl-badge wl-win">Win</span>' : pick !== null ? '<span class="wl-badge wl-lose">Lose</span>' : ''}
+    ${pick === side ? '<span class="bt-badge wl-win">Win</span>' : pick !== null ? '<span class="bt-badge wl-lose">Lose</span>' : ''}
   </div>`;
 }
 
