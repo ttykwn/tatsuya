@@ -308,15 +308,10 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .btn-auto:hover { background: rgba(201,171,82,0.1); }
 .auto-predict-hint { font-size: 0.7rem; color: var(--muted); }
 
-.zoom-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.zoom-btn { background: transparent; border: 1px solid var(--border); color: var(--text); min-width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; }
-.zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
-.zoom-label { font-size: 0.75rem; color: var(--muted); min-width: 36px; text-align: center; }
 
 @media (max-width: 600px) {
   header h1 { font-size: 1.2rem; }
   .groups-grid { grid-template-columns: repeat(2, 1fr); }
-  .bracket { min-width: 800px; }
   /* Hide pts/GD and subtitle on narrow cards to prevent wrapping */
   .team-stat { display: none; }
   .group-head small { display: none; }
@@ -358,12 +353,6 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     <button class="reset-btn" onclick="resetAll()">🔄 予想リセット</button>
   </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">チームをクリックして勝者を選択。もう一度クリックで解除。</div>
-  <div class="zoom-bar">
-    <button class="zoom-btn" onclick="zoomBracket(-0.1)">－</button>
-    <span class="zoom-label" id="zoomLabel">100%</span>
-    <button class="zoom-btn" onclick="zoomBracket(+0.1)">＋</button>
-    <button class="zoom-btn" onclick="resetZoom()" style="font-size:0.7rem;padding:0 8px;">リセット</button>
-  </div>
   <div class="bracket-wrap">
     <div class="bracket" id="bracket"></div>
   </div>
@@ -1134,6 +1123,7 @@ function showTab(id) {
   const i = tabs.indexOf(id);
   document.querySelectorAll('.tab')[i].classList.add('active');
   if (id === 'share') saveState();
+  if (id === 'bracket') autoScaleBracket();
 }
 
 // ===== AUTO PREDICT =====
@@ -1263,41 +1253,16 @@ function postToX() {
   window.open(intent, '_blank', 'noopener,noreferrer');
 }
 
-// ===== BRACKET ZOOM =====
-let bracketScale = 1;
-function applyBracketScale() {
-  const el = document.getElementById('bracket');
-  if (el) el.style.zoom = bracketScale;
-  const lbl = document.getElementById('zoomLabel');
-  if (lbl) lbl.textContent = Math.round(bracketScale * 100) + '%';
-}
-function zoomBracket(delta) {
-  bracketScale = Math.round(Math.min(2, Math.max(0.3, bracketScale + delta)) * 10) / 10;
-  applyBracketScale();
-}
-function resetZoom() {
-  bracketScale = 1;
-  applyBracketScale();
-}
-// Pinch-to-zoom
-(function() {
-  let lastDist = null;
+// ===== BRACKET AUTO-FIT =====
+function autoScaleBracket() {
+  const bracket = document.getElementById('bracket');
   const wrap = document.querySelector('.bracket-wrap');
-  if (!wrap) return;
-  wrap.addEventListener('touchstart', e => {
-    if (e.touches.length === 2)
-      lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-  }, { passive: true });
-  wrap.addEventListener('touchmove', e => {
-    if (e.touches.length !== 2 || lastDist === null) return;
-    e.preventDefault();
-    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-    bracketScale = Math.round(Math.min(2, Math.max(0.3, bracketScale * dist / lastDist)) * 100) / 100;
-    lastDist = dist;
-    applyBracketScale();
-  }, { passive: false });
-  wrap.addEventListener('touchend', () => { lastDist = null; }, { passive: true });
-})();
+  if (!bracket || !wrap || !wrap.clientWidth) return;
+  bracket.style.zoom = '';
+  const scale = Math.min(1, wrap.clientWidth / bracket.scrollWidth);
+  if (scale < 1) bracket.style.zoom = scale;
+}
+window.addEventListener('resize', autoScaleBracket);
 
 // ===== INIT =====
 loadFromUrl();
