@@ -416,6 +416,20 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   background: rgba(74,159,224,0.15); color: #4a9fe0;
   padding: 1px 6px; border-radius: 3px; font-size: 0.65rem;
 }
+.sch-predict-badge {
+  background: rgba(165,105,200,0.15); color: #c088e0;
+  padding: 1px 6px; border-radius: 3px; font-size: 0.65rem;
+  border: 1px dashed rgba(165,105,200,0.5);
+}
+.sch-match.predict .sch-time::before {
+  content: '〜'; font-size: 0.7em; color: #c088e0; margin-right: 1px;
+}
+.sch-watching-item.predict {
+  border-style: dashed;
+}
+.sch-watching-item.predict .sch-w-time::before {
+  content: '〜'; font-size: 0.85em; color: #c088e0; margin-right: 1px;
+}
 .sch-match.japan {
   background: rgba(224,64,64,0.08);
   border-left: 3px solid #e04040;
@@ -549,7 +563,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 <div id="saveToast" class="save-toast">💾 保存しました</div>
 
 <div id="tab-schedule" class="tab-pane">
-  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">⭐ をタップすると観戦予定に追加され、上のリストに表示されます。時間はすべて日本時間（JST）です。</div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">⭐ をタップすると観戦予定に追加され、上のリストに表示されます。時間はすべて日本時間（JST）です。<br>決勝トーナメント以降の対戦カードはあなたの予想に基づく<span style="color:#c088e0;">予想対戦</span>です（日程自体は公式スケジュール）。</div>
   <div class="sch-watching">
     <h3>観戦予定 <span class="sch-watching-count" id="schWatchCount">0</span></h3>
     <div id="schWatchingList"></div>
@@ -1673,11 +1687,13 @@ function renderSchedule() {
   } else {
     watchList.innerHTML = '<div class="sch-watching-list">' + watching.map(m => {
       const isJp = m.team1.text === '日本' || m.team2.text === '日本';
+      const isPredict = m.roundType === 'bracket';
       return `
-      <div class="sch-watching-item${isJp?' japan':''}">
+      <div class="sch-watching-item${isJp?' japan':''}${isPredict?' predict':''}">
         <span class="sch-w-date">${fmtDate(m.date)}</span>
         <span class="sch-w-time">${m.jst}</span>
         <span class="sch-w-teams">${m.team1.flag}${m.team1.text} <span class="vs">vs</span> ${m.team2.flag}${m.team2.text}</span>
+        ${isPredict?'<span class="sch-predict-badge">予想</span>':''}
         ${isJp?'<span class="sch-japan-badge">応援!</span>':''}
         <button class="sch-w-remove" onclick="removeWatching('${m.id}')" title="削除">✕</button>
       </div>
@@ -1716,8 +1732,9 @@ function renderSchedule() {
     const matchesHtml = hasMatches ? day.matches.map(mt => {
       const isOn = watchingMatches.has(mt.id);
       const isJp = mt.team1.text === '日本' || mt.team2.text === '日本';
+      const isPredict = mt.roundType === 'bracket';
       return `
-        <div class="sch-match${isOn?' selected':''}${isJp?' japan':''}" onclick="toggleWatching('${mt.id}')">
+        <div class="sch-match${isOn?' selected':''}${isJp?' japan':''}${isPredict?' predict':''}" onclick="toggleWatching('${mt.id}')">
           <div class="sch-time">${mt.jst}</div>
           <div class="sch-content">
             <div class="sch-teams">
@@ -1728,6 +1745,7 @@ function renderSchedule() {
             </div>
             <div class="sch-meta">
               <span class="sch-round-badge">${mt.round}</span>
+              ${isPredict?'<span class="sch-predict-badge">予想対戦</span>':''}
               <span>📍 ${mt.venue}</span>
             </div>
           </div>
