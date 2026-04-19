@@ -53,10 +53,14 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 
 /* Groups */
 .groups-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
-  align-items: start;
+  column-width: 260px;
+  column-gap: 12px;
+}
+.groups-grid > .group-card {
+  break-inside: avoid;
+  margin: 0 0 12px;
+  display: inline-block;
+  width: 100%;
 }
 .group-card {
   background: var(--card);
@@ -260,12 +264,12 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 
 @media (max-width: 600px) {
   header h1 { font-size: 1.2rem; }
-  .groups-grid { grid-template-columns: 1fr 1fr; }
+  .groups-grid { column-width: auto; column-count: 2; }
   .bracket { min-width: 800px; }
   .team-name { font-size: 0.75rem; }
 }
 @media (max-width: 400px) {
-  .groups-grid { grid-template-columns: 1fr; }
+  .groups-grid { column-count: 1; }
 }
 </style>
 </head>
