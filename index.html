@@ -295,6 +295,16 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .copy-ok { color: var(--accent); font-size: 0.8rem; margin-top: 6px; display: none; }
 .reset-btn { color: #e04040; background: none; border: 1px solid #e04040; font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
 .reset-btn:hover { background: rgba(224,64,64,0.1); }
+.auto-predict-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.btn-auto {
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 7px 14px; border-radius: 6px;
+  cursor: pointer; font-size: 0.8rem; font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-auto:hover { background: rgba(201,171,82,0.1); }
+.auto-predict-hint { font-size: 0.7rem; color: var(--muted); }
 
 @media (max-width: 600px) {
   header h1 { font-size: 1.2rem; }
@@ -325,11 +335,19 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 </nav>
 
 <div id="tab-groups" class="tab-pane active">
+  <div class="auto-predict-bar">
+    <button class="btn-auto" onclick="autoPredictGroups()">🎲 自動予想を生成</button>
+    <span class="auto-predict-hint">FIFAランキング＋最近の実績＋ランダム要素で一括入力</span>
+  </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループをクリックするとスコア入力欄がその場で展開します。<span id="thirdCounter" style="margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
 <div id="tab-bracket" class="tab-pane">
+  <div class="auto-predict-bar">
+    <button class="btn-auto" onclick="autoPredictBracket()">🎲 自動予想を生成</button>
+    <span class="auto-predict-hint">FIFAランキング＋最近の実績＋ランダム要素で一括入力</span>
+  </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">チームをクリックして勝者を選択。もう一度クリックで解除。</div>
   <div class="bracket-wrap">
     <div class="bracket" id="bracket"></div>
@@ -369,6 +387,22 @@ const GROUPS = {
   L: [{n:'イングランド',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{n:'クロアチア',f:'🇭🇷'},{n:'ガーナ',f:'🇬🇭'},{n:'パナマ',f:'🇵🇦'}],
 };
 const GKEYS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+// Team strength ratings (FIFA ranking + recent form). Used for auto-predict.
+const TEAM_STRENGTH = {
+  'メキシコ': 77, '韓国': 75, '南アフリカ': 60, 'チェコ': 65,
+  'カナダ': 72, 'スイス': 79, 'カタール': 58, 'ボスニア': 63,
+  'ブラジル': 89, 'モロッコ': 82, 'ハイチ': 50, 'スコットランド': 64,
+  'アメリカ': 77, 'オーストラリア': 72, 'パラグアイ': 62, 'トルコ': 70,
+  'ドイツ': 85, 'エクアドル': 74, 'コートジボワール': 68, 'キュラソー': 50,
+  'オランダ': 86, '日本': 78, 'チュニジア': 68, 'スウェーデン': 71,
+  'ベルギー': 84, 'イラン': 72, 'ニュージーランド': 60, 'エジプト': 69,
+  'スペイン': 91, 'サウジアラビア': 62, 'ウルグアイ': 81, 'カーボベルデ': 58,
+  'フランス': 92, 'ノルウェー': 74, 'セネガル': 77, 'イラク': 62,
+  'アルゼンチン': 94, 'オーストリア': 72, 'アルジェリア': 68, 'ヨルダン': 60,
+  'ポルトガル': 87, 'コロンビア': 82, 'コンゴ': 62, 'ウズベキスタン': 65,
+  'イングランド': 88, 'クロアチア': 81, 'ガーナ': 67, 'パナマ': 62,
+};
 
 // Match fixtures: [homeTeamIdx, awayTeamIdx, date, matchday, jstTime, venue]
 // Indexes correspond to GROUPS[g] order
@@ -1076,6 +1110,57 @@ function showTab(id) {
   const i = tabs.indexOf(id);
   document.querySelectorAll('.tab')[i].classList.add('active');
   if (id === 'share') saveState();
+}
+
+// ===== AUTO PREDICT =====
+function poisson(lambda) {
+  const L = Math.exp(-lambda);
+  let k = 0, p = 1;
+  do { k++; p *= Math.random(); } while (p > L);
+  return k - 1;
+}
+function predictScore(s1, s2) {
+  const diff = (s1 - s2) / 20;
+  const g1 = Math.max(0.3, 1.3 + diff);
+  const g2 = Math.max(0.3, 1.3 - diff);
+  return [Math.min(poisson(g1), 6), Math.min(poisson(g2), 6)];
+}
+function autoPredictGroups() {
+  if (!confirm('全てのグループステージの予想を自動生成します。現在の予想は上書きされます。')) return;
+  GKEYS.forEach(g => {
+    GROUP_MATCHES[g].forEach((m, mi) => {
+      const home = GROUPS[g][m[0]];
+      const away = GROUPS[g][m[1]];
+      const hs = TEAM_STRENGTH[home.n] || 50;
+      const as = TEAM_STRENGTH[away.n] || 50;
+      const [h, a] = predictScore(hs, as);
+      groupScores[g][mi] = [h, a];
+      groupWdl[g][mi] = null;
+    });
+  });
+  bracketPicks = new Array(32).fill(null);
+  renderGroups();
+  renderBracket();
+  saveState();
+}
+function autoPredictBracket() {
+  const incomplete = GKEYS.filter(g => !isGroupComplete(g));
+  if (incomplete.length > 0) {
+    alert('先にグループステージの予想を完了してください（自動予想ボタンで一括入力できます）。');
+    return;
+  }
+  if (!confirm('決勝トーナメントの予想を自動生成します。現在の予想は上書きされます。')) return;
+  bracketPicks = new Array(32).fill(null);
+  for (let mi = 0; mi < 32; mi++) {
+    const teams = getMatchTeams(mi);
+    if (!teams || !teams[0] || !teams[1]) continue;
+    const s1 = TEAM_STRENGTH[teams[0].n] || 50;
+    const s2 = TEAM_STRENGTH[teams[1].n] || 50;
+    const noise = (Math.random() - 0.5) * 25;
+    bracketPicks[mi] = ((s1 - s2) + noise) >= 0 ? 0 : 1;
+  }
+  renderBracket();
+  saveState();
 }
 
 // ===== INIT =====
