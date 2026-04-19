@@ -613,6 +613,7 @@ let groupWdl = {};
 GKEYS.forEach(g => groupWdl[g] = new Array(6).fill(null));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
 let manuallyEdited = false;
+let savedLocally = false;
 
 // Returns effective result for a match: score-derived if score set, else stored WDL, else null
 function getEffectiveResult(g, mi) {
@@ -1099,6 +1100,7 @@ function saveToLocal() {
   const p = params.get('p');
   if (p) localStorage.setItem(LOCAL_STORAGE_KEY, p);
   else localStorage.removeItem(LOCAL_STORAGE_KEY);
+  savedLocally = true;
   const toast = document.getElementById('saveToast');
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2000);
@@ -1134,7 +1136,7 @@ function copyUrl() {
 }
 
 function resetAll() {
-  if (manuallyEdited && hasAnyPredictions()) {
+  if ((manuallyEdited || savedLocally) && hasAnyPredictions()) {
     if (!confirm('手動で入力した予想が全てリセットされます。よろしいですか？')) return;
   }
   GKEYS.forEach(g => {
@@ -1143,6 +1145,7 @@ function resetAll() {
   });
   bracketPicks = new Array(32).fill(null);
   manuallyEdited = false;
+  savedLocally = false;
   renderGroups();
   renderBracket();
   saveState();
@@ -1204,23 +1207,25 @@ function generateBracketPredictions() {
   }
 }
 function autoPredictGroups() {
-  if (manuallyEdited && hasAnyPredictions()) {
+  if ((manuallyEdited || savedLocally) && hasAnyPredictions()) {
     if (!confirm('手動で入力した予想が上書きされます。よろしいですか？')) return;
   }
   generateGroupPredictions();
   bracketPicks = new Array(32).fill(null);
   manuallyEdited = false;
+  savedLocally = false;
   renderGroups();
   renderBracket();
   saveState();
 }
 function autoPredictBracket() {
-  if (manuallyEdited && hasAnyPredictions()) {
+  if ((manuallyEdited || savedLocally) && hasAnyPredictions()) {
     if (!confirm('手動で入力した予想が上書きされます。よろしいですか？')) return;
   }
   generateGroupPredictions();
   generateBracketPredictions();
   manuallyEdited = false;
+  savedLocally = false;
   renderGroups();
   renderBracket();
   saveState();
