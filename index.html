@@ -64,9 +64,9 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   display: flex; flex-direction: column;
   overflow: hidden;
 }
-/* Selected card: 1 row for standings + 2 rows for the score panel = span 3 (no scroll) */
+/* Selected card: 1 row for standings + 4 rows for the score panel = span 5 on PC (no scroll) */
 .group-card.selected {
-  grid-row: span 3;
+  grid-row: span 5;
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
   cursor: default;
@@ -275,6 +275,10 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   header h1 { font-size: 1.2rem; }
   .groups-grid { grid-template-columns: repeat(2, 1fr); }
   .bracket { min-width: 800px; }
+  /* On mobile hide points / goal-difference to keep team names readable */
+  .team-stat { display: none; }
+  /* Score panel: on mobile 2 extra rows (span 3) is enough to show all 6 matches */
+  .group-card.selected { grid-row: span 3; }
 }
 @media (max-width: 380px) {
   .groups-grid { grid-template-columns: 1fr; }
