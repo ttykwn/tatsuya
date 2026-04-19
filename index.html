@@ -362,10 +362,14 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   display: flex; align-items: center; gap: 8px;
   background: rgba(201,171,82,0.08); border: 1px solid rgba(201,171,82,0.3);
   border-radius: 6px; padding: 6px 10px; font-size: 0.78rem;
+  white-space: nowrap; overflow: hidden;
 }
-.sch-watching-item .sch-w-date { color: var(--accent); font-weight: 600; min-width: 80px; }
-.sch-watching-item .sch-w-time { color: var(--text); font-weight: 600; min-width: 50px; }
-.sch-watching-item .sch-w-teams { flex: 1; color: var(--text); }
+.sch-watching-item .sch-w-date { color: var(--accent); font-weight: 600; flex-shrink: 0; }
+.sch-watching-item .sch-w-time { color: var(--text); font-weight: 600; flex-shrink: 0; }
+.sch-watching-item .sch-w-teams {
+  flex: 1; min-width: 0; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .sch-watching-item .sch-w-remove {
   background: none; border: none; color: var(--muted);
   cursor: pointer; font-size: 1rem; padding: 0 4px;
@@ -417,8 +421,8 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   .sch-match.selected { padding-left: 7px; }
   .sch-time { font-size: 0.78rem; }
   .sch-teams { font-size: 0.78rem; }
-  .sch-watching-item { flex-wrap: wrap; }
-  .sch-watching-item .sch-w-date { min-width: 60px; }
+  .sch-watching-item { font-size: 0.7rem; gap: 5px; padding: 5px 8px; }
+  .sch-watching-item .sch-w-remove { font-size: 0.85rem; padding: 0 2px; }
 }
 </style>
 </head>
