@@ -52,22 +52,11 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .tab-pane.active { display: block; }
 
 /* Groups */
-.group-selector {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  margin-bottom: 14px;
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
 }
-.grp-btn {
-  width: 36px; height: 36px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--card);
-  color: var(--muted); font-size: 0.85rem; font-weight: bold;
-  cursor: pointer; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center;
-}
-.grp-btn:hover { border-color: var(--accent); color: var(--text); }
-.grp-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
-.grp-btn.done { border-color: rgba(40,160,40,0.6); color: rgba(40,200,40,0.9); }
-.grp-btn.active.done { background: rgba(40,160,40,0.8); color: #fff; border-color: rgba(40,160,40,0.8); }
-.groups-grid { /* single card view */ }
 .group-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -281,8 +270,7 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 </nav>
 
 <div id="tab-groups" class="tab-pane active">
-  <div class="group-selector" id="groupSelector"></div>
-  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;"><span id="thirdCounter">完了グループ 0/12 ・ 3位通過 0/8</span></div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループをクリックするとスコア入力欄が開きます。<span id="thirdCounter" style="margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
@@ -465,32 +453,24 @@ function getDependentMatches(matchIdx) {
 }
 
 // ===== RENDER GROUPS =====
-let selectedGroup = 'A';
+let openGroups = new Set();
 
 function renderGroups() {
-  renderGroupSelector();
   const el = document.getElementById('groupsGrid');
-  el.innerHTML = renderGroupCard(selectedGroup);
-  // Always open the match panel for the selected card
-  const card = el.querySelector('.group-card');
-  if (card) card.classList.add('open');
+  el.innerHTML = GKEYS.map(g => renderGroupCard(g)).join('');
   setupScoreInputs();
+  setupGroupHeaders();
   updateThirdCounter();
 }
 
-function renderGroupSelector() {
-  const el = document.getElementById('groupSelector');
-  if (!el) return;
-  el.innerHTML = GKEYS.map(g => {
-    const done = isGroupComplete(g);
-    const active = g === selectedGroup;
-    return `<button class="grp-btn${active?' active':''}${done?' done':''}" onclick="selectGroup('${g}')">${g}</button>`;
-  }).join('');
-}
-
-function selectGroup(g) {
-  selectedGroup = g;
-  renderGroups();
+function setupGroupHeaders() {
+  document.querySelectorAll('.group-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const g = head.dataset.g;
+      if (openGroups.has(g)) openGroups.delete(g); else openGroups.add(g);
+      head.closest('.group-card').classList.toggle('open', openGroups.has(g));
+    });
+  });
 }
 
 function renderGroupCard(g) {
@@ -530,10 +510,12 @@ function renderGroupCard(g) {
     </div>`;
   }).join('');
 
-  return `<div class="group-card">
-    <div class="group-head">
+  const isOpen = openGroups.has(g);
+  return `<div class="group-card${isOpen ? ' open' : ''}">
+    <div class="group-head" data-g="${g}">
       <span>グループ ${g}</span>
       <small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : 'スコア未入力'}</small>
+      <span class="toggle-icon">${isOpen ? '▲' : '▼'}</span>
     </div>
     <div class="team-list">${rows}</div>
     <div class="matches">${matches}</div>
