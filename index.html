@@ -594,7 +594,11 @@ function setupGroupCards() {
       renderGroups();
       if (openGroup && window.innerWidth <= 600) {
         const sel = document.querySelector('.group-card.selected');
-        if (sel) sel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (sel) {
+          const tabsH = document.querySelector('.tabs')?.offsetHeight ?? 0;
+          const top = sel.getBoundingClientRect().top + window.scrollY - tabsH - 6;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
       }
     });
   });
