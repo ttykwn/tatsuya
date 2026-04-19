@@ -424,28 +424,52 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   .sch-watching-item { font-size: 0.7rem; gap: 5px; padding: 5px 8px; }
   .sch-watching-item .sch-w-remove { font-size: 0.85rem; padding: 0 2px; }
 }
-@media (min-width: 900px) {
-  #schCalendar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-items: start; }
-  .sch-day { margin-bottom: 0; }
-  .sch-match { padding: 7px 12px; }
-  .sch-day-head { padding: 6px 12px; font-size: 0.78rem; }
-  .sch-teams { font-size: 0.8rem; }
-  .sch-meta { font-size: 0.65rem; }
+.sch-dow-row { display: none; }
+@media (max-width: 899px) {
+  .sch-day.empty { display: none; }
 }
-@media (min-width: 1200px) {
-  #schCalendar { grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .sch-day-head { flex-direction: column; align-items: flex-start; gap: 1px; padding: 5px 8px; font-size: 0.72rem; }
-  .sch-day-count { font-size: 0.62rem; }
+@media (min-width: 900px) {
+  #schCalendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    align-items: start;
+  }
+  .sch-dow-row {
+    display: contents;
+  }
+  .sch-dow-head {
+    text-align: center; font-size: 0.75rem; font-weight: 600;
+    padding: 4px 0; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .sch-dow-head.sun { color: #e04040; }
+  .sch-dow-head.sat { color: #4a9fe0; }
+  .sch-day {
+    margin-bottom: 0;
+    min-height: 60px;
+  }
+  .sch-day.empty {
+    background: transparent; border-color: transparent; opacity: 0.35;
+  }
+  .sch-day.empty .sch-day-head { background: transparent; border-bottom: none; }
+  .sch-day-head {
+    flex-direction: column; align-items: flex-start; gap: 1px;
+    padding: 4px 6px; font-size: 0.72rem;
+  }
+  .sch-day.sun .sch-day-head { color: #e04040; }
+  .sch-day.sat .sch-day-head { color: #4a9fe0; }
+  .sch-day-count { font-size: 0.6rem; }
   .sch-match {
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
     gap: 1px 4px;
-    padding: 5px 7px;
+    padding: 4px 6px;
   }
-  .sch-match.selected { border-left-width: 3px; padding-left: 4px; }
+  .sch-match.selected { border-left-width: 3px; padding-left: 3px; }
   .sch-time { grid-column: 1; grid-row: 1; font-size: 0.65rem; align-self: center; }
-  .sch-star { grid-column: 2; grid-row: 1; font-size: 1rem; }
+  .sch-star { grid-column: 2; grid-row: 1; font-size: 0.95rem; }
   .sch-content { grid-column: 1 / -1; grid-row: 2; }
   .sch-teams { font-size: 0.65rem; flex-direction: column; gap: 1px; align-items: flex-start; }
   .sch-teams .vs { font-size: 0.55rem; margin: 0; }
@@ -1633,41 +1657,61 @@ function renderSchedule() {
     if (!byDate.has(key)) byDate.set(key, { date: m.date, matches: [] });
     byDate.get(key).matches.push(m);
   });
-  const sortedDates = Array.from(byDate.keys()).sort((a, b) => a - b);
 
-  calendar.innerHTML = sortedDates.map(k => {
-    const day = byDate.get(k);
-    const dateLabel = fmtDate(day.date);
-    const cnt = day.matches.length;
-    return `
-      <div class="sch-day">
-        <div class="sch-day-head">
-          <span>📅 ${dateLabel}</span>
-          <span class="sch-day-count">${cnt}試合</span>
-        </div>
-        ${day.matches.map(m => {
-          const isOn = watchingMatches.has(m.id);
-          return `
-            <div class="sch-match${isOn?' selected':''}" onclick="toggleWatching('${m.id}')">
-              <div class="sch-time">${m.jst}</div>
-              <div class="sch-content">
-                <div class="sch-teams">
-                  <span>${m.team1.flag}${m.team1.text}</span>
-                  <span class="vs">vs</span>
-                  <span>${m.team2.flag}${m.team2.text}</span>
-                </div>
-                <div class="sch-meta">
-                  <span class="sch-round-badge">${m.round}</span>
-                  <span>📍 ${m.venue}</span>
-                </div>
-              </div>
-              <button class="sch-star${isOn?' on':''}" onclick="event.stopPropagation();toggleWatching('${m.id}')" title="観戦予定に追加">${isOn?'★':'☆'}</button>
+  // Build calendar range: Sunday of first week → Saturday of last week
+  const firstMatchKey = Math.min(...byDate.keys());
+  const lastMatchKey = Math.max(...byDate.keys());
+  const firstMatchDate = new Date(2026, Math.floor(firstMatchKey/100) - 1, firstMatchKey%100);
+  const lastMatchDate = new Date(2026, Math.floor(lastMatchKey/100) - 1, lastMatchKey%100);
+  const startDate = new Date(firstMatchDate); startDate.setDate(startDate.getDate() - startDate.getDay());
+  const endDate = new Date(lastMatchDate); endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+
+  const dowHeaders = ['日','月','火','水','木','金','土'];
+  const dowClasses = ['sun','mon','tue','wed','thu','fri','sat'];
+  const headRow = dowHeaders.map((d,i) => `<div class="sch-dow-head ${dowClasses[i]}">${d}</div>`).join('');
+
+  const cells = [];
+  const cur = new Date(startDate);
+  while (cur <= endDate) {
+    const m = cur.getMonth() + 1;
+    const d = cur.getDate();
+    const dow = cur.getDay();
+    const key = m * 100 + d;
+    const day = byDate.get(key);
+    const hasMatches = !!day;
+    const matchesHtml = hasMatches ? day.matches.map(mt => {
+      const isOn = watchingMatches.has(mt.id);
+      return `
+        <div class="sch-match${isOn?' selected':''}" onclick="toggleWatching('${mt.id}')">
+          <div class="sch-time">${mt.jst}</div>
+          <div class="sch-content">
+            <div class="sch-teams">
+              <span>${mt.team1.flag}${mt.team1.text}</span>
+              <span class="vs">vs</span>
+              <span>${mt.team2.flag}${mt.team2.text}</span>
             </div>
-          `;
-        }).join('')}
+            <div class="sch-meta">
+              <span class="sch-round-badge">${mt.round}</span>
+              <span>📍 ${mt.venue}</span>
+            </div>
+          </div>
+          <button class="sch-star${isOn?' on':''}" onclick="event.stopPropagation();toggleWatching('${mt.id}')" title="観戦予定に追加">${isOn?'★':'☆'}</button>
+        </div>
+      `;
+    }).join('') : '';
+    cells.push(`
+      <div class="sch-day ${dowClasses[dow]}${hasMatches?'':' empty'}">
+        <div class="sch-day-head">
+          <span>${m}/${d}(${dowHeaders[dow]})</span>
+          ${hasMatches ? `<span class="sch-day-count">${day.matches.length}試合</span>` : ''}
+        </div>
+        ${matchesHtml}
       </div>
-    `;
-  }).join('');
+    `);
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  calendar.innerHTML = `<div class="sch-dow-row">${headRow}</div>` + cells.join('');
 }
 
 // ===== INIT =====
