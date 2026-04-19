@@ -586,7 +586,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     <button class="reset-btn" onclick="resetAll()">🔄 予想リセット</button>
     <button class="save-btn" onclick="saveToLocal()">💾 保存</button>
   </div>
-  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループを選択して予想を入力！<span id="thirdCounter" style="margin-left:6px;">予想完了グループ 0/12</span></div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループを選択して予想を入力！</div>
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
@@ -1164,15 +1164,7 @@ function updateStandingsDom(g) {
   head.textContent = complete ? '予想完了' : '未入力';
 }
 
-function updateThirdCounter() {
-  const counter = document.getElementById('thirdCounter');
-  if (counter) {
-    const n = getThirdAdvancing().length;
-    const completedGroups = GKEYS.filter(isGroupComplete).length;
-    counter.textContent = `予想完了グループ ${completedGroups}/12`;
-    counter.style.color = completedGroups === 12 ? 'var(--accent)' : 'var(--muted)';
-  }
-}
+function updateThirdCounter() {}
 
 // ===== RENDER BRACKET =====
 function renderBracket() {
