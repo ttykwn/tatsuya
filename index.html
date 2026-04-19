@@ -53,15 +53,30 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 
 /* Groups */
 .groups-grid {
-  column-width: 260px;
-  column-gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  align-items: start;
 }
-.groups-grid > .group-card {
-  break-inside: avoid;
-  margin: 0 0 12px;
-  display: inline-block;
-  width: 100%;
+/* Score panel shown below the grid for the selected group */
+.score-panel {
+  margin-top: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
 }
+.score-panel .group-head { cursor: default; }
+.score-panel .group-head:hover { background: linear-gradient(90deg, #002060, #003090); }
+.score-panel .matches { display: block; }
+.sp-close {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+  font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+}
+.sp-close:hover { color: var(--text); border-color: var(--accent); }
+.group-card { cursor: pointer; transition: border-color 0.15s; }
+.group-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .group-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -72,16 +87,14 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   background: linear-gradient(90deg, #002060, #003090);
   padding: 8px 14px;
   display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; user-select: none;
+  user-select: none; gap: 8px;
 }
-.group-head:hover { background: linear-gradient(90deg, #002878, #003aaa); }
+.group-card:hover .group-head { background: linear-gradient(90deg, #002878, #003aaa); }
 .group-head span { font-size: 1rem; font-weight: bold; color: var(--accent); }
 .group-head small { font-size: 0.7rem; color: var(--muted); }
-.group-head .toggle-icon { font-size: 0.7rem; color: var(--muted); }
 
-/* Matches panel: hidden by default, shown when open */
-.matches { border-top: 1px solid var(--border); padding: 6px 6px 8px; display: none; }
-.group-card.open .matches { display: block; }
+/* Matches panel (inside score-panel only) */
+.matches { border-top: 1px solid var(--border); padding: 6px 6px 8px; }
 .team-list { padding: 6px; }
 .team-row {
   display: flex; align-items: center; gap: 8px;
@@ -264,12 +277,12 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 
 @media (max-width: 600px) {
   header h1 { font-size: 1.2rem; }
-  .groups-grid { column-width: auto; column-count: 2; }
+  .groups-grid { grid-template-columns: repeat(3, 1fr); }
   .bracket { min-width: 800px; }
   .team-name { font-size: 0.75rem; }
 }
 @media (max-width: 400px) {
-  .groups-grid { column-count: 1; }
+  .groups-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -287,8 +300,9 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 </nav>
 
 <div id="tab-groups" class="tab-pane active">
-  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループをクリックするとスコア入力欄が開きます。<span id="thirdCounter" style="margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループをクリックするとスコア入力欄が下に表示されます。<span id="thirdCounter" style="margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
   <div class="groups-grid" id="groupsGrid"></div>
+  <div id="scorePanel"></div>
 </div>
 
 <div id="tab-bracket" class="tab-pane">
@@ -567,22 +581,20 @@ let openGroup = null; // only one group open at a time
 function renderGroups() {
   const el = document.getElementById('groupsGrid');
   el.innerHTML = GKEYS.map(g => renderGroupCard(g)).join('');
-  setupScoreInputs();
-  setupGroupHeaders();
+  setupGroupCards();
+  renderScorePanel();
   updateThirdCounter();
 }
 
-function setupGroupHeaders() {
-  document.querySelectorAll('.group-head').forEach(head => {
-    head.addEventListener('click', () => {
-      const g = head.dataset.g;
+function setupGroupCards() {
+  document.querySelectorAll('.group-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const g = card.dataset.g;
       openGroup = (openGroup === g) ? null : g;
-      document.querySelectorAll('.group-card').forEach(card => {
-        const cg = card.querySelector('.group-head').dataset.g;
-        const on = cg === openGroup;
-        card.classList.toggle('open', on);
-        card.querySelector('.toggle-icon').textContent = on ? '▲' : '▼';
+      document.querySelectorAll('.group-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.g === openGroup);
       });
+      renderScorePanel();
     });
   });
 }
@@ -592,6 +604,7 @@ function renderGroupCard(g) {
   const standings = getStandings(g);
   const thirdAdvList = getThirdAdvancing();
   const thirdIsAdvancing = thirdAdvList.includes(g);
+  const isSel = openGroup === g;
 
   const rows = standings.map((s, pos) => {
     const t = GROUPS[g][s.idx];
@@ -606,6 +619,19 @@ function renderGroupCard(g) {
     </div>`;
   }).join('');
 
+  return `<div class="group-card${isSel ? ' selected' : ''}" data-g="${g}">
+    <div class="group-head">
+      <span>グループ ${g}</span>
+      <small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : 'スコア未入力'}</small>
+    </div>
+    <div class="team-list">${rows}</div>
+  </div>`;
+}
+
+function renderScorePanel() {
+  const el = document.getElementById('scorePanel');
+  if (!openGroup) { el.innerHTML = ''; return; }
+  const g = openGroup;
   const matches = GROUP_MATCHES[g].map((m, mi) => {
     const th = GROUPS[g][m[0]];
     const ta = GROUPS[g][m[1]];
@@ -628,17 +654,17 @@ function renderGroupCard(g) {
       </div>
     </div>`;
   }).join('');
-
-  const isOpen = openGroup === g;
-  return `<div class="group-card${isOpen ? ' open' : ''}">
-    <div class="group-head" data-g="${g}">
-      <span>グループ ${g}</span>
-      <small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : 'スコア未入力'}</small>
-      <span class="toggle-icon">${isOpen ? '▲' : '▼'}</span>
-    </div>
-    <div class="team-list">${rows}</div>
+  el.innerHTML = `<div class="score-panel">
+    <div class="group-head"><span>グループ ${g} スコア入力</span><button class="sp-close" onclick="closeScorePanel()">✕</button></div>
     <div class="matches">${matches}</div>
   </div>`;
+  setupScoreInputs();
+}
+
+function closeScorePanel() {
+  openGroup = null;
+  document.querySelectorAll('.group-card.selected').forEach(c => c.classList.remove('selected'));
+  renderScorePanel();
 }
 
 function setupScoreInputs() {
@@ -650,7 +676,11 @@ function setupScoreInputs() {
       const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
       groupScores[g][mi][side] = v;
       bracketPicks = new Array(32).fill(null);
-      renderGroups();
+      // Re-render only the card grid so standings update but input keeps focus
+      const el = document.getElementById('groupsGrid');
+      el.innerHTML = GKEYS.map(g => renderGroupCard(g)).join('');
+      setupGroupCards();
+      updateThirdCounter();
       renderBracket();
       saveState();
     });
