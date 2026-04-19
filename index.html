@@ -203,7 +203,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .third-card.selected .third-check { visibility: visible; }
 
 /* Bracket */
-.bracket-wrap { overflow-x: auto; padding-bottom: 10px; }
+.bracket-wrap { overflow: hidden; padding-bottom: 10px; }
 .bracket {
   display: flex;
   gap: 0;
@@ -946,6 +946,7 @@ function renderBracket() {
     makeRoundCol('ラウンド32', rightR32),
   ].join('');
 
+  autoScaleBracket();
   document.querySelectorAll('.bteam[data-match]').forEach(el => {
     el.addEventListener('click', () => {
       const mi = parseInt(el.dataset.match);
@@ -1256,12 +1257,24 @@ function postToX() {
 
 // ===== BRACKET AUTO-FIT =====
 function autoScaleBracket() {
-  const bracket = document.getElementById('bracket');
-  const wrap = document.querySelector('.bracket-wrap');
-  if (!bracket || !wrap || !wrap.clientWidth) return;
-  bracket.style.zoom = '';
-  const scale = Math.min(1, wrap.clientWidth / bracket.scrollWidth);
-  if (scale < 1) bracket.style.zoom = scale;
+  requestAnimationFrame(() => {
+    const bracket = document.getElementById('bracket');
+    const wrap = document.querySelector('.bracket-wrap');
+    if (!bracket || !wrap) return;
+    // Reset to measure natural dimensions
+    bracket.style.transform = '';
+    bracket.style.transformOrigin = '';
+    wrap.style.height = '';
+    const wrapW = wrap.getBoundingClientRect().width;
+    const naturalW = bracket.scrollWidth;
+    const naturalH = bracket.scrollHeight;
+    if (!wrapW || !naturalW) return;
+    if (naturalW <= wrapW) return;
+    const scale = wrapW / naturalW;
+    bracket.style.transformOrigin = 'top left';
+    bracket.style.transform = `scale(${scale})`;
+    wrap.style.height = Math.ceil(naturalH * scale) + 'px';
+  });
 }
 window.addEventListener('resize', autoScaleBracket);
 
