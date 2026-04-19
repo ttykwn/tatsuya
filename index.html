@@ -101,29 +101,31 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   background: rgba(255,255,255,0.1);
 }
 .team-flag { font-size: 1.2rem; flex-shrink: 0; line-height: 1; }
-.team-name { font-size: 0.8rem; flex: 1; }
-.drag-icon { color: var(--muted); font-size: 0.7rem; }
-.team-stat { font-size: 0.65rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
-.adv-mark { font-size: 0.6rem; color: var(--accent); padding: 1px 5px; border: 1px solid var(--accent); border-radius: 8px; white-space: nowrap; }
+.team-name { font-size: 0.82rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-stat { font-size: 0.65rem; color: var(--muted); margin-left: 4px; white-space: nowrap; flex-shrink: 0; }
+.adv-mark { font-size: 0.6rem; color: var(--accent); padding: 1px 5px; border: 1px solid var(--accent); border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
 
 /* Matches inside group card */
-.match-row { padding: 5px 2px; border-bottom: 1px dashed rgba(255,255,255,0.04); }
+.match-row { padding: 5px 4px; border-bottom: 1px dashed rgba(255,255,255,0.06); }
 .match-row:last-child { border-bottom: none; }
-.md-tag { font-size: 0.6rem; color: var(--muted); display: block; margin-bottom: 2px; padding-left: 4px; }
-.match-line { display: flex; align-items: center; gap: 4px; }
-.mt { display: flex; align-items: center; gap: 4px; flex: 1; font-size: 0.72rem; min-width: 0; }
-.mt.home { justify-content: flex-end; text-align: right; }
+.md-tag { font-size: 0.6rem; color: var(--muted); display: block; margin-bottom: 3px; }
+.match-line { display: flex; align-items: center; gap: 3px; }
+.mt { display: flex; align-items: center; gap: 3px; flex: 1; min-width: 0; }
+.mt.home { justify-content: flex-end; }
 .mt.away { justify-content: flex-start; }
-.mt span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* flag: no shrink, name: shrinks and clips */
+.mt .mflag { font-size: 1rem; flex-shrink: 0; line-height: 1; }
+.mt .mname { font-size: clamp(0.58rem, 2.2vw, 0.72rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .sc-in {
-  width: 32px; height: 26px; text-align: center;
+  width: 30px; height: 28px; text-align: center;
   background: rgba(0,0,0,0.3); border: 1px solid var(--border);
-  border-radius: 5px; color: var(--text); font-size: 0.85rem;
-  font-weight: bold; padding: 0; -moz-appearance: textfield;
+  border-radius: 5px; color: var(--text); font-size: 0.9rem;
+  font-weight: bold; padding: 0; flex-shrink: 0;
+  -moz-appearance: textfield;
 }
 .sc-in::-webkit-outer-spin-button, .sc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .sc-in:focus { outline: none; border-color: var(--accent); }
-.sc-sep { color: var(--muted); font-size: 0.7rem; }
+.sc-sep { color: var(--muted); font-size: 0.7rem; flex-shrink: 0; }
 
 /* Third place */
 .third-wrap { max-width: 750px; margin: 0 auto; }
@@ -253,6 +255,10 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   header h1 { font-size: 1.2rem; }
   .groups-grid { grid-template-columns: 1fr 1fr; }
   .bracket { min-width: 800px; }
+  .team-name { font-size: 0.75rem; }
+}
+@media (max-width: 400px) {
+  .groups-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -300,18 +306,18 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 <script>
 // ===== DATA =====
 const GROUPS = {
-  A: [{n:'Mexico',f:'🇲🇽'},{n:'Czech Republic',f:'🇨🇿'},{n:'South Africa',f:'🇿🇦'},{n:'South Korea',f:'🇰🇷'}],
-  B: [{n:'Canada',f:'🇨🇦'},{n:'Bosnia & Herz.',f:'🇧🇦'},{n:'Qatar',f:'🇶🇦'},{n:'Switzerland',f:'🇨🇭'}],
-  C: [{n:'Brazil',f:'🇧🇷'},{n:'Morocco',f:'🇲🇦'},{n:'Haiti',f:'🇭🇹'},{n:'Scotland',f:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'}],
-  D: [{n:'USA',f:'🇺🇸'},{n:'Paraguay',f:'🇵🇾'},{n:'Australia',f:'🇦🇺'},{n:'Türkiye',f:'🇹🇷'}],
-  E: [{n:'Germany',f:'🇩🇪'},{n:'Ivory Coast',f:'🇨🇮'},{n:'Ecuador',f:'🇪🇨'},{n:'Curaçao',f:'🇨🇼'}],
-  F: [{n:'Netherlands',f:'🇳🇱'},{n:'Sweden',f:'🇸🇪'},{n:'Tunisia',f:'🇹🇳'},{n:'Japan',f:'🇯🇵'}],
-  G: [{n:'Belgium',f:'🇧🇪'},{n:'Egypt',f:'🇪🇬'},{n:'Iran',f:'🇮🇷'},{n:'New Zealand',f:'🇳🇿'}],
-  H: [{n:'Spain',f:'🇪🇸'},{n:'Saudi Arabia',f:'🇸🇦'},{n:'Uruguay',f:'🇺🇾'},{n:'Cape Verde',f:'🇨🇻'}],
-  I: [{n:'France',f:'🇫🇷'},{n:'Senegal',f:'🇸🇳'},{n:'Iraq',f:'🇮🇶'},{n:'Norway',f:'🇳🇴'}],
-  J: [{n:'Argentina',f:'🇦🇷'},{n:'Algeria',f:'🇩🇿'},{n:'Austria',f:'🇦🇹'},{n:'Jordan',f:'🇯🇴'}],
-  K: [{n:'Portugal',f:'🇵🇹'},{n:'DR Congo',f:'🇨🇩'},{n:'Uzbekistan',f:'🇺🇿'},{n:'Colombia',f:'🇨🇴'}],
-  L: [{n:'England',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{n:'Croatia',f:'🇭🇷'},{n:'Ghana',f:'🇬🇭'},{n:'Panama',f:'🇵🇦'}],
+  A: [{n:'メキシコ',f:'🇲🇽'},{n:'チェコ',f:'🇨🇿'},{n:'南アフリカ',f:'🇿🇦'},{n:'韓国',f:'🇰🇷'}],
+  B: [{n:'カナダ',f:'🇨🇦'},{n:'ボスニア',f:'🇧🇦'},{n:'カタール',f:'🇶🇦'},{n:'スイス',f:'🇨🇭'}],
+  C: [{n:'ブラジル',f:'🇧🇷'},{n:'モロッコ',f:'🇲🇦'},{n:'ハイチ',f:'🇭🇹'},{n:'スコットランド',f:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'}],
+  D: [{n:'アメリカ',f:'🇺🇸'},{n:'パラグアイ',f:'🇵🇾'},{n:'オーストラリア',f:'🇦🇺'},{n:'トルコ',f:'🇹🇷'}],
+  E: [{n:'ドイツ',f:'🇩🇪'},{n:'コートジボワール',f:'🇨🇮'},{n:'エクアドル',f:'🇪🇨'},{n:'キュラソー',f:'🇨🇼'}],
+  F: [{n:'オランダ',f:'🇳🇱'},{n:'スウェーデン',f:'🇸🇪'},{n:'チュニジア',f:'🇹🇳'},{n:'日本',f:'🇯🇵'}],
+  G: [{n:'ベルギー',f:'🇧🇪'},{n:'エジプト',f:'🇪🇬'},{n:'イラン',f:'🇮🇷'},{n:'ニュージーランド',f:'🇳🇿'}],
+  H: [{n:'スペイン',f:'🇪🇸'},{n:'サウジアラビア',f:'🇸🇦'},{n:'ウルグアイ',f:'🇺🇾'},{n:'カーボベルデ',f:'🇨🇻'}],
+  I: [{n:'フランス',f:'🇫🇷'},{n:'セネガル',f:'🇸🇳'},{n:'イラク',f:'🇮🇶'},{n:'ノルウェー',f:'🇳🇴'}],
+  J: [{n:'アルゼンチン',f:'🇦🇷'},{n:'アルジェリア',f:'🇩🇿'},{n:'オーストリア',f:'🇦🇹'},{n:'ヨルダン',f:'🇯🇴'}],
+  K: [{n:'ポルトガル',f:'🇵🇹'},{n:'コンゴ民主',f:'🇨🇩'},{n:'ウズベキスタン',f:'🇺🇿'},{n:'コロンビア',f:'🇨🇴'}],
+  L: [{n:'イングランド',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{n:'クロアチア',f:'🇭🇷'},{n:'ガーナ',f:'🇬🇭'},{n:'パナマ',f:'🇵🇦'}],
 };
 const GKEYS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
@@ -506,11 +512,11 @@ function renderGroupCard(g) {
     return `<div class="match-row">
       <span class="md-tag">${m[3]} ${m[2]}</span>
       <div class="match-line">
-        <span class="mt home"><span>${th.f}</span><span>${th.n}</span></span>
+        <span class="mt home"><span class="mname">${th.n}</span><span class="mflag">${th.f}</span></span>
         <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="0" value="${h}" placeholder="-">
         <span class="sc-sep">–</span>
         <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="1" value="${a}" placeholder="-">
-        <span class="mt away"><span>${ta.n}</span><span>${ta.f}</span></span>
+        <span class="mt away"><span class="mflag">${ta.f}</span><span class="mname">${ta.n}</span></span>
       </div>
     </div>`;
   }).join('');
