@@ -135,7 +135,7 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .mt.away { justify-content: flex-start; }
 /* flag: no shrink, name: full display (no ellipsis, wrap if needed) */
 .mt .mflag { font-size: 1rem; flex-shrink: 0; line-height: 1; }
-.mt .mname { font-size: clamp(0.55rem, 2vw, 0.72rem); white-space: nowrap; overflow: hidden; min-width: 0; }
+.mt .mname { font-size: clamp(0.55rem, 2vw, 0.72rem); white-space: nowrap; min-width: 0; }
 .sc-in {
   width: 30px; height: 28px; text-align: center;
   background: rgba(0,0,0,0.3); border: 1px solid var(--border);
@@ -278,6 +278,8 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   /* Hide pts/GD and subtitle on narrow cards to prevent wrapping */
   .team-stat { display: none; }
   .group-head small { display: none; }
+  /* Expand selected card to full width so score panel has room for team names */
+  .group-card.selected { grid-column: 1 / -1; }
 }
 @media (max-width: 380px) {
   .groups-grid { grid-template-columns: 1fr; }
