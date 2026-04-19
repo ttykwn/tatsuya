@@ -55,7 +55,7 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .groups-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  grid-auto-rows: 200px;
+  grid-auto-rows: minmax(200px, auto);
   gap: 12px;
 }
 .group-card {
@@ -64,15 +64,15 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   display: flex; flex-direction: column;
   overflow: hidden;
 }
-/* Selected card doubles in height (2 rows + gap) and shows the score panel */
+/* Selected card: 1 row for standings + 2 rows for the score panel = span 3 (no scroll) */
 .group-card.selected {
-  grid-row: span 2;
+  grid-row: span 3;
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
   cursor: default;
 }
 .group-card .matches { display: none; }
-.group-card.selected .matches { display: block; flex: 1; overflow-y: auto; }
+.group-card.selected .matches { display: block; flex: 1; }
 .group-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -114,7 +114,7 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   background: rgba(255,255,255,0.1);
 }
 .team-flag { font-size: 1.2rem; flex-shrink: 0; line-height: 1; }
-.team-name { font-size: 0.82rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-name { font-size: 0.82rem; flex: 1; word-break: break-word; line-height: 1.25; }
 .team-stat { font-size: 0.65rem; color: var(--muted); margin-left: 4px; white-space: nowrap; flex-shrink: 0; }
 .adv-mark { font-size: 0.6rem; color: var(--accent); padding: 1px 5px; border: 1px solid var(--accent); border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
 
@@ -133,9 +133,9 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .mt { display: flex; align-items: center; gap: 3px; flex: 1; min-width: 0; }
 .mt.home { justify-content: flex-end; }
 .mt.away { justify-content: flex-start; }
-/* flag: no shrink, name: shrinks and clips */
+/* flag: no shrink, name: full display (no ellipsis, wrap if needed) */
 .mt .mflag { font-size: 1rem; flex-shrink: 0; line-height: 1; }
-.mt .mname { font-size: clamp(0.58rem, 2.2vw, 0.72rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.mt .mname { font-size: clamp(0.62rem, 2.2vw, 0.72rem); word-break: break-word; line-height: 1.2; min-width: 0; }
 .sc-in {
   width: 30px; height: 28px; text-align: center;
   background: rgba(0,0,0,0.3); border: 1px solid var(--border);
@@ -273,12 +273,11 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 
 @media (max-width: 600px) {
   header h1 { font-size: 1.2rem; }
-  .groups-grid { grid-template-columns: repeat(3, 1fr); }
-  .bracket { min-width: 800px; }
-  .team-name { font-size: 0.75rem; }
-}
-@media (max-width: 400px) {
   .groups-grid { grid-template-columns: repeat(2, 1fr); }
+  .bracket { min-width: 800px; }
+}
+@media (max-width: 380px) {
+  .groups-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
