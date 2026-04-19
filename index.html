@@ -425,18 +425,18 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   .sch-watching-item .sch-w-remove { font-size: 0.85rem; padding: 0 2px; }
 }
 @media (min-width: 900px) {
-  #schCalendar { column-count: 2; column-gap: 14px; }
-  .sch-day { break-inside: avoid; display: inline-block; width: 100%; }
+  #schCalendar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-items: start; }
+  .sch-day { margin-bottom: 0; }
   .sch-match { padding: 7px 12px; }
   .sch-day-head { padding: 6px 12px; font-size: 0.78rem; }
   .sch-teams { font-size: 0.8rem; }
   .sch-meta { font-size: 0.65rem; }
 }
 @media (min-width: 1300px) {
-  #schCalendar { column-count: 3; }
+  #schCalendar { grid-template-columns: repeat(3, 1fr); }
 }
 @media (min-width: 1700px) {
-  #schCalendar { column-count: 4; }
+  #schCalendar { grid-template-columns: repeat(4, 1fr); }
 }
 </style>
 </head>
