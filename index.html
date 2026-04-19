@@ -411,6 +411,30 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   background: rgba(74,159,224,0.15); color: #4a9fe0;
   padding: 1px 6px; border-radius: 3px; font-size: 0.65rem;
 }
+.sch-match.japan {
+  background: rgba(224,64,64,0.08);
+  border-left: 3px solid #e04040;
+  padding-left: 11px;
+}
+.sch-match.japan.selected {
+  background: rgba(224,64,64,0.14);
+  border-left-color: #ff6060;
+}
+.sch-japan-badge {
+  background: linear-gradient(90deg, #e04040, #c02020);
+  color: #fff; font-weight: 700;
+  padding: 1px 7px; border-radius: 3px; font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  animation: jpPulse 2s ease-in-out infinite;
+}
+.sch-watching-item.japan {
+  background: rgba(224,64,64,0.1);
+  border-color: rgba(224,64,64,0.5);
+}
+@keyframes jpPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224,64,64,0.5); }
+  50% { box-shadow: 0 0 0 3px rgba(224,64,64,0); }
+}
 .sch-star {
   background: none; border: none; color: var(--muted);
   font-size: 1.3rem; cursor: pointer; padding: 0; line-height: 1;
@@ -419,6 +443,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 @media (max-width: 600px) {
   .sch-match { grid-template-columns: 44px 1fr 28px; gap: 6px; padding: 8px 10px; }
   .sch-match.selected { padding-left: 7px; }
+  .sch-match.japan { padding-left: 7px; }
   .sch-time { font-size: 0.78rem; }
   .sch-teams { font-size: 0.78rem; }
   .sch-watching-item { font-size: 0.7rem; gap: 5px; padding: 5px 8px; }
@@ -468,6 +493,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     padding: 4px 6px;
   }
   .sch-match.selected { border-left-width: 3px; padding-left: 3px; }
+  .sch-match.japan { padding-left: 3px; }
   .sch-time { grid-column: 1; grid-row: 1; font-size: 0.65rem; align-self: center; }
   .sch-star { grid-column: 2; grid-row: 1; font-size: 0.95rem; }
   .sch-content { grid-column: 1 / -1; grid-row: 2; }
@@ -1640,14 +1666,17 @@ function renderSchedule() {
   if (watching.length === 0) {
     watchList.innerHTML = '<div class="sch-watching-empty">観戦したい試合の ⭐ をタップしてください</div>';
   } else {
-    watchList.innerHTML = '<div class="sch-watching-list">' + watching.map(m => `
-      <div class="sch-watching-item">
+    watchList.innerHTML = '<div class="sch-watching-list">' + watching.map(m => {
+      const isJp = m.team1.text === '日本' || m.team2.text === '日本';
+      return `
+      <div class="sch-watching-item${isJp?' japan':''}">
         <span class="sch-w-date">${fmtDate(m.date)}</span>
         <span class="sch-w-time">${m.jst}</span>
         <span class="sch-w-teams">${m.team1.flag}${m.team1.text} <span class="vs">vs</span> ${m.team2.flag}${m.team2.text}</span>
+        ${isJp?'<span class="sch-japan-badge">応援!</span>':''}
         <button class="sch-w-remove" onclick="removeWatching('${m.id}')" title="削除">✕</button>
       </div>
-    `).join('') + '</div>';
+    `;}).join('') + '</div>';
   }
 
   // Group by date
@@ -1681,14 +1710,16 @@ function renderSchedule() {
     const hasMatches = !!day;
     const matchesHtml = hasMatches ? day.matches.map(mt => {
       const isOn = watchingMatches.has(mt.id);
+      const isJp = mt.team1.text === '日本' || mt.team2.text === '日本';
       return `
-        <div class="sch-match${isOn?' selected':''}" onclick="toggleWatching('${mt.id}')">
+        <div class="sch-match${isOn?' selected':''}${isJp?' japan':''}" onclick="toggleWatching('${mt.id}')">
           <div class="sch-time">${mt.jst}</div>
           <div class="sch-content">
             <div class="sch-teams">
               <span>${mt.team1.flag}${mt.team1.text}</span>
               <span class="vs">vs</span>
               <span>${mt.team2.flag}${mt.team2.text}</span>
+              ${isJp?'<span class="sch-japan-badge">応援!</span>':''}
             </div>
             <div class="sch-meta">
               <span class="sch-round-badge">${mt.round}</span>
