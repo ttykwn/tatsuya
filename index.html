@@ -1172,7 +1172,6 @@ function generateBracketPredictions() {
   }
 }
 function autoPredictGroups() {
-  if (hasAnyPredictions() && !isAutoPredicted() && !confirm('全てのグループステージの予想を自動生成します。現在の予想は上書きされます。')) return;
   generateGroupPredictions();
   bracketPicks = new Array(32).fill(null);
   setAutoPredicted(true);
@@ -1181,7 +1180,6 @@ function autoPredictGroups() {
   saveState();
 }
 function autoPredictBracket() {
-  if (hasAnyPredictions() && !isAutoPredicted() && !confirm('グループステージと決勝トーナメントの予想を自動生成します。現在の予想は上書きされます。')) return;
   generateGroupPredictions();
   generateBracketPredictions();
   setAutoPredicted(true);
