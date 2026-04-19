@@ -303,6 +303,15 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .copy-ok { color: var(--accent); font-size: 0.8rem; margin-top: 6px; display: none; }
 .reset-btn { color: #e04040; background: none; border: 1px solid #e04040; font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
 .reset-btn:hover { background: rgba(224,64,64,0.1); }
+.save-btn { color: #4a9fe0; background: none; border: 1px solid #4a9fe0; font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+.save-btn:hover { background: rgba(74,159,224,0.1); }
+.save-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #2a3a2a; color: #6dc96d; border: 1px solid #6dc96d;
+  padding: 8px 20px; border-radius: 8px; font-size: 0.85rem;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999;
+}
+.save-toast.show { opacity: 1; }
 .auto-predict-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .btn-auto {
   background: transparent; color: var(--accent);
@@ -347,6 +356,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 <div id="tab-groups" class="tab-pane active">
   <div class="auto-predict-bar">
     <button class="btn-auto" onclick="autoPredictGroups()">🎲 自動予想</button>
+    <button class="save-btn" onclick="saveToLocal()">💾 保存</button>
     <button class="reset-btn" onclick="resetAll()">🔄 予想リセット</button>
   </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループをクリックするとスコア入力欄がその場で展開します。<span id="thirdCounter" style="margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
@@ -356,6 +366,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 <div id="tab-bracket" class="tab-pane">
   <div class="auto-predict-bar">
     <button class="btn-auto" onclick="autoPredictBracket()">🎲 自動予想</button>
+    <button class="save-btn" onclick="saveToLocal()">💾 保存</button>
     <button class="reset-btn" onclick="resetAll()">🔄 予想リセット</button>
   </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">チームをクリックして勝者を選択。もう一度クリックで解除。</div>
@@ -365,6 +376,8 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     </div>
   </div>
 </div>
+
+<div id="saveToast" class="save-toast">💾 保存しました</div>
 
 <div id="tab-share" class="tab-pane">
   <div class="share-wrap">
@@ -1078,9 +1091,22 @@ function generateUrl() {
   return location.href.split('?')[0] + '?p=' + b64;
 }
 
+const LOCAL_STORAGE_KEY = 'fifa2026-prediction';
+
+function saveToLocal() {
+  const url = generateUrl();
+  const params = new URLSearchParams(new URL(url, location.href).search);
+  const p = params.get('p');
+  if (p) localStorage.setItem(LOCAL_STORAGE_KEY, p);
+  else localStorage.removeItem(LOCAL_STORAGE_KEY);
+  const toast = document.getElementById('saveToast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
 function loadFromUrl() {
   const params = new URLSearchParams(location.search);
-  const p = params.get('p');
+  const p = params.get('p') || localStorage.getItem(LOCAL_STORAGE_KEY);
   if (!p) return;
   try {
     const json = decodeURIComponent(escape(atob(p)));
