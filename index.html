@@ -1114,7 +1114,7 @@ function resetAll() {
     const sc = groupScores[g][mi];
     return (sc[0] !== null && sc[1] !== null) || groupWdl[g][mi] !== null;
   })) || bracketPicks.some(p => p !== null);
-  if (hasAny && !confirm('全ての予想をリセットしますか？')) return;
+  if (hasAny && !autoPredicted && !confirm('全ての予想をリセットしますか？')) return;
   GKEYS.forEach(g => {
     groupScores[g] = new Array(6).fill(null).map(() => [null, null]);
     groupWdl[g] = new Array(6).fill(null);
