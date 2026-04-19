@@ -411,7 +411,8 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .sch-content { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .sch-teams { font-size: 0.85rem; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .sch-teams .vs { color: var(--muted); font-size: 0.7rem; }
-.sch-meta { font-size: 0.68rem; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.sch-meta { font-size: 0.68rem; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.sch-venue { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .sch-round-badge {
   background: rgba(74,159,224,0.15); color: #4a9fe0;
   padding: 1px 6px; border-radius: 3px; font-size: 0.65rem;
@@ -518,7 +519,15 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   .sch-content { grid-column: 1 / -1; grid-row: 2; }
   .sch-teams { font-size: 0.65rem; flex-direction: column; gap: 1px; align-items: flex-start; }
   .sch-teams .vs { font-size: 0.55rem; margin: 0; }
-  .sch-meta { display: none; }
+  .sch-meta {
+    display: block; font-size: 0.58rem; line-height: 1.2; margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sch-meta .sch-round-badge,
+  .sch-meta .sch-predict-badge { display: none; }
+}
+@media (max-width: 360px) {
+  .sch-venue { display: none; }
 }
 </style>
 </head>
@@ -1746,7 +1755,7 @@ function renderSchedule() {
             <div class="sch-meta">
               <span class="sch-round-badge">${mt.round}</span>
               ${isPredict?'<span class="sch-predict-badge">予想対戦</span>':''}
-              <span>📍 ${mt.venue}</span>
+              <span class="sch-venue">📍 ${mt.venue}</span>
             </div>
           </div>
           <button class="sch-star${isOn?' on':''}" onclick="event.stopPropagation();toggleWatching('${mt.id}')" title="観戦予定に追加">${isOn?'★':'☆'}</button>
