@@ -52,11 +52,22 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .tab-pane.active { display: block; }
 
 /* Groups */
-.groups-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 12px;
+.group-selector {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 14px;
 }
+.grp-btn {
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--muted); font-size: 0.85rem; font-weight: bold;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.grp-btn:hover { border-color: var(--accent); color: var(--text); }
+.grp-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+.grp-btn.done { border-color: rgba(40,160,40,0.6); color: rgba(40,200,40,0.9); }
+.grp-btn.active.done { background: rgba(40,160,40,0.8); color: #fff; border-color: rgba(40,160,40,0.8); }
+.groups-grid { /* single card view */ }
 .group-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -270,7 +281,8 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 </nav>
 
 <div id="tab-groups" class="tab-pane active">
-  <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">各試合のスコアを入力すると順位が自動計算され、3位通過8チームも自動で決まります。<span id="thirdCounter" style="color:var(--muted);margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
+  <div class="group-selector" id="groupSelector"></div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;"><span id="thirdCounter">完了グループ 0/12 ・ 3位通過 0/8</span></div>
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
@@ -453,28 +465,32 @@ function getDependentMatches(matchIdx) {
 }
 
 // ===== RENDER GROUPS =====
-let openGroups = new Set(); // groups with expanded match panel
+let selectedGroup = 'A';
 
 function renderGroups() {
+  renderGroupSelector();
   const el = document.getElementById('groupsGrid');
-  el.innerHTML = GKEYS.map(g => renderGroupCard(g)).join('');
+  el.innerHTML = renderGroupCard(selectedGroup);
+  // Always open the match panel for the selected card
+  const card = el.querySelector('.group-card');
+  if (card) card.classList.add('open');
   setupScoreInputs();
-  setupGroupHeaders();
   updateThirdCounter();
 }
 
-function setupGroupHeaders() {
-  document.querySelectorAll('.group-head').forEach(head => {
-    head.addEventListener('click', () => {
-      const g = head.dataset.g;
-      if (openGroups.has(g)) openGroups.delete(g);
-      else openGroups.add(g);
-      // Toggle class without full re-render to preserve input focus
-      const card = head.closest('.group-card');
-      card.classList.toggle('open', openGroups.has(g));
-      head.querySelector('.toggle-icon').style.transform = openGroups.has(g) ? 'rotate(180deg)' : '';
-    });
-  });
+function renderGroupSelector() {
+  const el = document.getElementById('groupSelector');
+  if (!el) return;
+  el.innerHTML = GKEYS.map(g => {
+    const done = isGroupComplete(g);
+    const active = g === selectedGroup;
+    return `<button class="grp-btn${active?' active':''}${done?' done':''}" onclick="selectGroup('${g}')">${g}</button>`;
+  }).join('');
+}
+
+function selectGroup(g) {
+  selectedGroup = g;
+  renderGroups();
 }
 
 function renderGroupCard(g) {
@@ -514,12 +530,10 @@ function renderGroupCard(g) {
     </div>`;
   }).join('');
 
-  const isOpen = openGroups.has(g);
-  return `<div class="group-card${isOpen ? ' open' : ''}">
-    <div class="group-head" data-g="${g}">
+  return `<div class="group-card">
+    <div class="group-head">
       <span>グループ ${g}</span>
       <small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : 'スコア未入力'}</small>
-      <span class="toggle-icon" style="${isOpen ? 'transform:rotate(180deg)' : ''}">▼</span>
     </div>
     <div class="team-list">${rows}</div>
     <div class="matches">${matches}</div>
