@@ -422,8 +422,18 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   padding: 1px 6px; border-radius: 3px; font-size: 0.65rem;
   border: 1px dashed rgba(165,105,200,0.5);
 }
-.sch-match.predict .sch-time::before {
-  content: '〜'; font-size: 0.7em; color: #c088e0; margin-right: 1px;
+.sch-match.predict {
+  background: rgba(165,105,200,0.06);
+  border-left: 3px dashed #a569c8;
+  padding-left: 11px;
+}
+.sch-match.predict.selected {
+  background: rgba(165,105,200,0.14);
+  border-left-style: solid;
+}
+.sch-match.predict.japan {
+  border-left-color: #e04040;
+  border-left-style: dashed;
 }
 .sch-watching-item.predict {
   border-style: dashed;
@@ -464,6 +474,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   .sch-match { grid-template-columns: 44px 1fr 28px; gap: 6px; padding: 8px 10px; }
   .sch-match.selected { padding-left: 7px; }
   .sch-match.japan { padding-left: 7px; }
+  .sch-match.predict { padding-left: 7px; }
   .sch-time { font-size: 0.78rem; }
   .sch-teams { font-size: 0.78rem; }
   .sch-watching-item { font-size: 0.7rem; gap: 5px; padding: 5px 8px; }
@@ -523,8 +534,11 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     display: block; font-size: 0.58rem; line-height: 1.2; margin-top: 2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .sch-meta .sch-round-badge,
-  .sch-meta .sch-predict-badge { display: none; }
+  .sch-meta .sch-round-badge { display: none; }
+  .sch-predict-badge {
+    font-size: 0.55rem; padding: 0 4px; border-style: solid;
+  }
+  .sch-match.predict { padding-left: 4px; }
 }
 @media (max-width: 360px) {
   .sch-venue { display: none; }
@@ -572,7 +586,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 <div id="saveToast" class="save-toast">💾 保存しました</div>
 
 <div id="tab-schedule" class="tab-pane">
-  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">⭐ をタップすると観戦予定に追加され、上のリストに表示されます。時間はすべて日本時間（JST）です。<br>決勝トーナメント以降の対戦カードはあなたの予想に基づく<span style="color:#c088e0;">予想対戦</span>です（日程自体は公式スケジュール）。</div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">⭐ をタップすると観戦予定に追加され、上のリストに表示されます。時間はすべて日本時間（JST）です。<br>決勝トーナメント以降の対戦カードはあなたの予想に基づく<span style="color:#c088e0;">予想対戦</span>です。</div>
   <div class="sch-watching">
     <h3>観戦予定 <span class="sch-watching-count" id="schWatchCount">0</span></h3>
     <div id="schWatchingList"></div>
