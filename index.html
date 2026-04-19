@@ -665,7 +665,11 @@ function renderGroupCard(g) {
   const rows = standings.map((s, pos) => {
     const t = GROUPS[g][s.idx];
     const cls = ['rank-1','rank-2','rank-3','rank-4'][pos];
-    const note = pos === 2 && complete && thirdIsAdvancing ? '<span class="adv-mark">✓進出</span>' : '';
+    let note = '';
+    if (complete) {
+      if (pos <= 1) note = '<span class="adv-mark">✓進出</span>';
+      else if (pos === 2 && thirdIsAdvancing) note = '<span class="adv-mark">✓進出</span>';
+    }
     return `<div class="team-row ${cls}">
       <span class="rank-num">${pos+1}</span>
       <span class="team-flag">${t.f}</span>
@@ -706,7 +710,7 @@ function renderGroupCard(g) {
   return `<div class="group-card${isSel ? ' selected' : ''}" data-g="${g}">
     <div class="group-head">
       <span>グループ ${g}</span>
-      <small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : 'スコア未入力'}</small>
+      <small>${complete ? '予想完了' : '未入力'}</small>
     </div>
     <div class="team-list">${rows}</div>
     <div class="matches">${matches}</div>
@@ -767,7 +771,11 @@ function updateStandingsDom(g) {
   const rows = standings.map((s, pos) => {
     const t = GROUPS[g][s.idx];
     const cls = ['rank-1','rank-2','rank-3','rank-4'][pos];
-    const note = pos === 2 && complete && thirdAdv ? '<span class="adv-mark">✓進出</span>' : '';
+    let note = '';
+    if (complete) {
+      if (pos <= 1) note = '<span class="adv-mark">✓進出</span>';
+      else if (pos === 2 && thirdAdv) note = '<span class="adv-mark">✓進出</span>';
+    }
     return `<div class="team-row ${cls}">
       <span class="rank-num">${pos+1}</span>
       <span class="team-flag">${t.f}</span>
@@ -778,7 +786,7 @@ function updateStandingsDom(g) {
   }).join('');
   card.querySelector('.team-list').innerHTML = rows;
   const head = card.querySelector('.group-head small');
-  head.textContent = complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : 'スコア未入力';
+  head.textContent = complete ? '予想完了' : '未入力';
 }
 
 function updateThirdCounter() {
