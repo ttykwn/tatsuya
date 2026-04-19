@@ -155,11 +155,18 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   background: transparent; color: var(--muted);
   cursor: pointer; transition: all 0.15s;
   display: flex; align-items: center; justify-content: center;
+  position: relative;
 }
 .wdl-btn:hover { border-color: rgba(200,168,75,0.5); color: var(--text); }
 .wdl-btn.wdl-active { border-color: var(--accent); color: var(--accent); background: rgba(200,168,75,0.12); font-weight: bold; }
 /* Team winner button: stacked flag + name, fills available space */
 .wdl-team { flex: 1; min-width: 0; flex-direction: column; gap: 2px; padding: 4px 3px; }
+.wl-badge {
+  position: absolute; top: 2px; right: 3px;
+  font-size: 0.42rem; font-weight: 700; line-height: 1; pointer-events: none;
+}
+.wl-win { color: var(--accent); }
+.wl-lose { color: var(--muted); opacity: 0.7; }
 .wdl-flag { font-size: 1.1rem; line-height: 1; flex-shrink: 0; }
 .wdl-name { font-size: clamp(0.5rem, 1.6vw, 0.63rem); white-space: nowrap; }
 /* Draw button: compact, fixed */
@@ -737,18 +744,20 @@ function renderGroupCard(g) {
     return `<div class="match-row">
       <div class="md-tag">
         <span class="md-md">${m[3]}</span>
-        <span class="md-date">${m[2]}(${dow}) ${m[4]}</span>
+        <span class="md-date">${m[2]}(${dow}) ${m[4]}(JST)</span>
         <span class="md-venue">${m[5]}</span>
       </div>
       <div class="match-line">
         <button class="wdl-btn wdl-team${r==='W'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="W">
           <span class="wdl-flag">${th.f}</span><span class="wdl-name">${th.n}</span>
+          ${r==='W'?'<span class="wl-badge wl-win">Win</span>':r==='L'?'<span class="wl-badge wl-lose">Lose</span>':''}
         </button>
         <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="0" value="${h}" placeholder="-">
         <button class="wdl-btn wdl-draw${r==='D'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="D">DRAW</button>
         <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="1" value="${a}" placeholder="-">
         <button class="wdl-btn wdl-team${r==='L'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="L">
           <span class="wdl-flag">${ta.f}</span><span class="wdl-name">${ta.n}</span>
+          ${r==='L'?'<span class="wl-badge wl-win">Win</span>':r==='W'?'<span class="wl-badge wl-lose">Lose</span>':''}
         </button>
       </div>
     </div>`;
@@ -762,6 +771,23 @@ function renderGroupCard(g) {
     <div class="team-list">${rows}</div>
     <div class="matches">${matches}</div>
   </div>`;
+}
+
+function updateWdlBadges(g, mi, r) {
+  ['W', 'L'].forEach(side => {
+    const btn = document.querySelector(`.wdl-btn[data-g="${g}"][data-mi="${mi}"][data-r="${side}"]`);
+    if (!btn) return;
+    let badge = btn.querySelector('.wl-badge');
+    const win = side === 'W' ? r === 'W' : r === 'L';
+    const lose = side === 'W' ? r === 'L' : r === 'W';
+    if (win || lose) {
+      if (!badge) { badge = document.createElement('span'); btn.appendChild(badge); }
+      badge.textContent = win ? 'Win' : 'Lose';
+      badge.className = `wl-badge ${win ? 'wl-win' : 'wl-lose'}`;
+    } else if (badge) {
+      badge.remove();
+    }
+  });
 }
 
 function setupScoreInputs() {
@@ -778,6 +804,7 @@ function setupScoreInputs() {
       document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
         b.classList.toggle('wdl-active', b.dataset.r === r);
       });
+      updateWdlBadges(g, mi, r);
       GKEYS.forEach(gk => updateStandingsDom(gk));
       updateThirdCounter();
       renderBracket();
@@ -800,6 +827,7 @@ function setupWdlButtons() {
       document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
         b.classList.toggle('wdl-active', b.dataset.r === groupWdl[g][mi]);
       });
+      updateWdlBadges(g, mi, groupWdl[g][mi]);
       bracketPicks = new Array(32).fill(null);
       GKEYS.forEach(gk => updateStandingsDom(gk));
       updateThirdCounter();
