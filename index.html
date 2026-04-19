@@ -453,7 +453,7 @@ function getDependentMatches(matchIdx) {
 }
 
 // ===== RENDER GROUPS =====
-let openGroups = new Set();
+let openGroup = null; // only one group open at a time
 
 function renderGroups() {
   const el = document.getElementById('groupsGrid');
@@ -467,8 +467,13 @@ function setupGroupHeaders() {
   document.querySelectorAll('.group-head').forEach(head => {
     head.addEventListener('click', () => {
       const g = head.dataset.g;
-      if (openGroups.has(g)) openGroups.delete(g); else openGroups.add(g);
-      head.closest('.group-card').classList.toggle('open', openGroups.has(g));
+      openGroup = (openGroup === g) ? null : g;
+      document.querySelectorAll('.group-card').forEach(card => {
+        const cg = card.querySelector('.group-head').dataset.g;
+        const on = cg === openGroup;
+        card.classList.toggle('open', on);
+        card.querySelector('.toggle-icon').textContent = on ? '▲' : '▼';
+      });
     });
   });
 }
@@ -510,7 +515,7 @@ function renderGroupCard(g) {
     </div>`;
   }).join('');
 
-  const isOpen = openGroups.has(g);
+  const isOpen = openGroup === g;
   return `<div class="group-card${isOpen ? ' open' : ''}">
     <div class="group-head" data-g="${g}">
       <span>グループ ${g}</span>
