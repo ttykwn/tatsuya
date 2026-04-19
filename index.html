@@ -146,19 +146,20 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .sc-in::-webkit-outer-spin-button, .sc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .sc-in:focus { outline: none; border-color: var(--accent); }
 .sc-sep { color: var(--muted); font-size: 0.7rem; flex-shrink: 0; }
-.wdl-row { display: flex; gap: 4px; margin-top: 5px; align-items: stretch; }
 .wdl-btn {
   border: 1px solid var(--border); border-radius: 5px;
   background: transparent; color: var(--muted);
   cursor: pointer; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 4px;
+  display: flex; align-items: center; justify-content: center;
 }
 .wdl-btn:hover { border-color: rgba(200,168,75,0.5); color: var(--text); }
 .wdl-btn.wdl-active { border-color: var(--accent); color: var(--accent); background: rgba(200,168,75,0.12); font-weight: bold; }
-.wdl-team { flex: 1; padding: 5px 4px; flex-direction: column; font-size: 0; gap: 2px; }
-.wdl-flag { font-size: 1.1rem; line-height: 1; }
-.wdl-name { font-size: clamp(0.52rem, 1.8vw, 0.64rem); white-space: nowrap; }
-.wdl-draw { padding: 5px 8px; font-size: 0.62rem; white-space: nowrap; flex-shrink: 0; }
+/* Team winner button: stacked flag + name, fills available space */
+.wdl-team { flex: 1; min-width: 0; flex-direction: column; gap: 2px; padding: 4px 3px; }
+.wdl-flag { font-size: 1.1rem; line-height: 1; flex-shrink: 0; }
+.wdl-name { font-size: clamp(0.5rem, 1.6vw, 0.63rem); white-space: nowrap; }
+/* Draw button: compact, fixed */
+.wdl-draw { padding: 4px 5px; font-size: 0.58rem; white-space: nowrap; flex-shrink: 0; }
 
 /* Third place */
 .third-wrap { max-width: 750px; margin: 0 auto; }
@@ -676,17 +677,12 @@ function renderGroupCard(g) {
         <span class="md-venue">${m[5]}</span>
       </div>
       <div class="match-line">
-        <span class="mt home"><span class="mname">${th.n}</span><span class="mflag">${th.f}</span></span>
-        <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="0" value="${h}" placeholder="-">
-        <span class="sc-sep">–</span>
-        <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="1" value="${a}" placeholder="-">
-        <span class="mt away"><span class="mflag">${ta.f}</span><span class="mname">${ta.n}</span></span>
-      </div>
-      <div class="wdl-row">
         <button class="wdl-btn wdl-team${r==='W'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="W">
           <span class="wdl-flag">${th.f}</span><span class="wdl-name">${th.n}</span>
         </button>
+        <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="0" value="${h}" placeholder="-">
         <button class="wdl-btn wdl-draw${r==='D'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="D">引分</button>
+        <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="1" value="${a}" placeholder="-">
         <button class="wdl-btn wdl-team${r==='L'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="L">
           <span class="wdl-flag">${ta.f}</span><span class="wdl-name">${ta.n}</span>
         </button>
