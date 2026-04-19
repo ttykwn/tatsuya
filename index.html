@@ -67,9 +67,17 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   background: linear-gradient(90deg, #002060, #003090);
   padding: 8px 14px;
   display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
 }
+.group-head:hover { background: linear-gradient(90deg, #002878, #003aaa); }
 .group-head span { font-size: 1rem; font-weight: bold; color: var(--accent); }
 .group-head small { font-size: 0.7rem; color: var(--muted); }
+.group-head .toggle-icon { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+.group-card.open .toggle-icon { transform: rotate(180deg); }
+
+/* Matches panel: hidden by default, shown when open */
+.matches { border-top: 1px solid var(--border); padding: 6px 6px 8px; display: none; }
+.group-card.open .matches { display: block; }
 .team-list { padding: 6px; }
 .team-row {
   display: flex; align-items: center; gap: 8px;
@@ -99,7 +107,6 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .adv-mark { font-size: 0.6rem; color: var(--accent); padding: 1px 5px; border: 1px solid var(--accent); border-radius: 8px; white-space: nowrap; }
 
 /* Matches inside group card */
-.matches { border-top: 1px solid var(--border); padding: 6px 6px 8px; }
 .match-row { padding: 5px 2px; border-bottom: 1px dashed rgba(255,255,255,0.04); }
 .match-row:last-child { border-bottom: none; }
 .md-tag { font-size: 0.6rem; color: var(--muted); display: block; margin-bottom: 2px; padding-left: 4px; }
@@ -446,11 +453,28 @@ function getDependentMatches(matchIdx) {
 }
 
 // ===== RENDER GROUPS =====
+let openGroups = new Set(); // groups with expanded match panel
+
 function renderGroups() {
   const el = document.getElementById('groupsGrid');
   el.innerHTML = GKEYS.map(g => renderGroupCard(g)).join('');
   setupScoreInputs();
+  setupGroupHeaders();
   updateThirdCounter();
+}
+
+function setupGroupHeaders() {
+  document.querySelectorAll('.group-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const g = head.dataset.g;
+      if (openGroups.has(g)) openGroups.delete(g);
+      else openGroups.add(g);
+      // Toggle class without full re-render to preserve input focus
+      const card = head.closest('.group-card');
+      card.classList.toggle('open', openGroups.has(g));
+      head.querySelector('.toggle-icon').style.transform = openGroups.has(g) ? 'rotate(180deg)' : '';
+    });
+  });
 }
 
 function renderGroupCard(g) {
@@ -490,8 +514,13 @@ function renderGroupCard(g) {
     </div>`;
   }).join('');
 
-  return `<div class="group-card">
-    <div class="group-head"><span>グループ ${g}</span><small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : '未入力'}</small></div>
+  const isOpen = openGroups.has(g);
+  return `<div class="group-card${isOpen ? ' open' : ''}">
+    <div class="group-head" data-g="${g}">
+      <span>グループ ${g}</span>
+      <small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : 'スコア未入力'}</small>
+      <span class="toggle-icon" style="${isOpen ? 'transform:rotate(180deg)' : ''}">▼</span>
+    </div>
     <div class="team-list">${rows}</div>
     <div class="matches">${matches}</div>
   </div>`;
