@@ -54,6 +54,11 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   grid-auto-rows: minmax(200px, auto);
   gap: 12px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+@media (min-width: 1200px) {
+  .groups-grid { grid-template-columns: repeat(4, 1fr); }
 }
 .group-card {
   cursor: pointer;
