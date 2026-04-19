@@ -591,8 +591,6 @@ GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null])
 let groupWdl = {};
 GKEYS.forEach(g => groupWdl[g] = new Array(6).fill(null));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
-function setAutoPredicted(val) { document.body && document.body.setAttribute('data-ap', val ? '1' : ''); }
-function isAutoPredicted() { return document.body && document.body.getAttribute('data-ap') === '1'; }
 
 // Returns effective result for a match: score-derived if score set, else stored WDL, else null
 function getEffectiveResult(g, mi) {
@@ -840,7 +838,6 @@ function setupScoreInputs() {
       const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
       groupScores[g][mi][side] = v;
       bracketPicks = new Array(32).fill(null);
-      setAutoPredicted(false);
       // Reflect score result on WDL buttons without re-render
       const r = getEffectiveResult(g, mi);
       document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
@@ -871,7 +868,6 @@ function setupWdlButtons() {
       });
       updateWdlBadges(g, mi, groupWdl[g][mi]);
       bracketPicks = new Array(32).fill(null);
-      setAutoPredicted(false);
       GKEYS.forEach(gk => updateStandingsDom(gk));
       updateThirdCounter();
       renderBracket();
@@ -960,7 +956,6 @@ function renderBracket() {
         bracketPicks[mi] = side;
         clearDependentPicks(mi);
       }
-      setAutoPredicted(false);
       renderBracket();
       saveState();
     });
@@ -1101,11 +1096,6 @@ function copyUrl() {
 }
 
 function resetAll() {
-  const hasAny = GKEYS.some(g => GROUP_MATCHES[g].some((_, mi) => {
-    const sc = groupScores[g][mi];
-    return (sc[0] !== null && sc[1] !== null) || groupWdl[g][mi] !== null;
-  })) || bracketPicks.some(p => p !== null);
-  if (hasAny && !isAutoPredicted() && !confirm('全ての予想をリセットしますか？')) return;
   GKEYS.forEach(g => {
     groupScores[g] = new Array(6).fill(null).map(() => [null, null]);
     groupWdl[g] = new Array(6).fill(null);
@@ -1174,7 +1164,6 @@ function generateBracketPredictions() {
 function autoPredictGroups() {
   generateGroupPredictions();
   bracketPicks = new Array(32).fill(null);
-  setAutoPredicted(true);
   renderGroups();
   renderBracket();
   saveState();
@@ -1182,7 +1171,6 @@ function autoPredictGroups() {
 function autoPredictBracket() {
   generateGroupPredictions();
   generateBracketPredictions();
-  setAutoPredicted(true);
   renderGroups();
   renderBracket();
   saveState();
