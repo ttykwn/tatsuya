@@ -1731,7 +1731,7 @@ function renderSchedule() {
   } else {
     watchList.innerHTML = '<div class="sch-watching-list">' + watching.map(m => {
       const isJp = m.team1.text === '日本' || m.team2.text === '日本';
-      const isPredict = m.roundType === 'bracket';
+      const isPredict = m.roundType === 'bracket' && !!m.team1.flag && !!m.team2.flag;
       return `
       <div class="sch-watching-item${isJp?' japan':''}${isPredict?' predict':''}">
         <span class="sch-w-date">${fmtDate(m.date)}</span>
@@ -1776,7 +1776,7 @@ function renderSchedule() {
     const matchesHtml = hasMatches ? day.matches.map(mt => {
       const isOn = watchingMatches.has(mt.id);
       const isJp = mt.team1.text === '日本' || mt.team2.text === '日本';
-      const isPredict = mt.roundType === 'bracket';
+      const isPredict = mt.roundType === 'bracket' && !!mt.team1.flag && !!mt.team2.flag;
       return `
         <div class="sch-match${isOn?' selected':''}${isJp?' japan':''}${isPredict?' predict':''}" onclick="toggleWatching('${mt.id}')">
           <div class="sch-time-wrap">
