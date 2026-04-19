@@ -146,6 +146,15 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .sc-in::-webkit-outer-spin-button, .sc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .sc-in:focus { outline: none; border-color: var(--accent); }
 .sc-sep { color: var(--muted); font-size: 0.7rem; flex-shrink: 0; }
+.wdl-row { display: flex; justify-content: center; gap: 6px; margin-top: 4px; }
+.wdl-btn {
+  padding: 2px 10px; font-size: 0.62rem;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: transparent; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+}
+.wdl-btn:hover { border-color: rgba(200,168,75,0.5); color: var(--text); }
+.wdl-btn.wdl-active { border-color: var(--accent); color: var(--accent); background: rgba(200,168,75,0.12); font-weight: bold; }
 
 /* Third place */
 .third-wrap { max-width: 750px; margin: 0 auto; }
@@ -467,7 +476,18 @@ const R32_DEF = [
 // groupScores[g] = array of 6 [homeScore, awayScore] or null for unset
 let groupScores = {};
 GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null]));
+// groupWdl[g][mi] = 'W'|'D'|'L' (home-team perspective) or null; used when score not entered
+let groupWdl = {};
+GKEYS.forEach(g => groupWdl[g] = new Array(6).fill(null));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
+
+// Returns effective result for a match: score-derived if score set, else stored WDL, else null
+function getEffectiveResult(g, mi) {
+  const sc = groupScores[g][mi];
+  if (sc[0] !== null && sc[1] !== null)
+    return sc[0] > sc[1] ? 'W' : sc[0] < sc[1] ? 'L' : 'D';
+  return groupWdl[g][mi];
+}
 
 // ===== STANDINGS CALCULATION =====
 // Returns array of 4 objects sorted by standing: {idx, pts, gd, gf, ga, w, d, l}
@@ -475,13 +495,22 @@ function getStandings(g) {
   const stats = [0,1,2,3].map(i => ({idx:i, pts:0, gd:0, gf:0, ga:0, w:0, d:0, l:0}));
   GROUP_MATCHES[g].forEach((m, mi) => {
     const sc = groupScores[g][mi];
-    if (sc[0] === null || sc[1] === null) return;
+    const hasScore = sc[0] !== null && sc[1] !== null;
     const [h, a] = [m[0], m[1]];
-    stats[h].gf += sc[0]; stats[h].ga += sc[1];
-    stats[a].gf += sc[1]; stats[a].ga += sc[0];
-    if (sc[0] > sc[1]) { stats[h].pts += 3; stats[h].w++; stats[a].l++; }
-    else if (sc[0] < sc[1]) { stats[a].pts += 3; stats[a].w++; stats[h].l++; }
-    else { stats[h].pts++; stats[a].pts++; stats[h].d++; stats[a].d++; }
+    if (hasScore) {
+      stats[h].gf += sc[0]; stats[h].ga += sc[1];
+      stats[a].gf += sc[1]; stats[a].ga += sc[0];
+      if (sc[0] > sc[1]) { stats[h].pts += 3; stats[h].w++; stats[a].l++; }
+      else if (sc[0] < sc[1]) { stats[a].pts += 3; stats[a].w++; stats[h].l++; }
+      else { stats[h].pts++; stats[a].pts++; stats[h].d++; stats[a].d++; }
+    } else {
+      const wdl = groupWdl[g][mi];
+      if (!wdl) return;
+      // WDL-only: pts contributed but no GD/GF/GA
+      if (wdl === 'W') { stats[h].pts += 3; stats[h].w++; stats[a].l++; }
+      else if (wdl === 'L') { stats[a].pts += 3; stats[a].w++; stats[h].l++; }
+      else { stats[h].pts++; stats[a].pts++; stats[h].d++; stats[a].d++; }
+    }
   });
   stats.forEach(s => s.gd = s.gf - s.ga);
   // FIFA tiebreakers: pts, gd, gf, then stable by original idx
@@ -489,9 +518,12 @@ function getStandings(g) {
   return stats;
 }
 
-// Returns true if all 6 matches in group g have scores entered
+// Returns true if all 6 matches have a score OR a WDL result
 function isGroupComplete(g) {
-  return groupScores[g].every(sc => sc[0] !== null && sc[1] !== null);
+  return GROUP_MATCHES[g].every((_, mi) => {
+    const sc = groupScores[g][mi];
+    return (sc[0] !== null && sc[1] !== null) || groupWdl[g][mi] !== null;
+  });
 }
 
 // Returns array of group keys whose 3rd-place team advances (best 8 of 12)
@@ -582,6 +614,7 @@ function renderGroups() {
   el.innerHTML = GKEYS.map(g => renderGroupCard(g)).join('');
   setupGroupCards();
   setupScoreInputs();
+  setupWdlButtons();
   updateThirdCounter();
 }
 
@@ -631,6 +664,7 @@ function renderGroupCard(g) {
     const h = sc[0] === null ? '' : sc[0];
     const a = sc[1] === null ? '' : sc[1];
     const dow = dayOfWeek(m[2]);
+    const r = getEffectiveResult(g, mi);
     return `<div class="match-row">
       <div class="md-tag">
         <span class="md-md">${m[3]}</span>
@@ -643,6 +677,11 @@ function renderGroupCard(g) {
         <span class="sc-sep">–</span>
         <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="1" value="${a}" placeholder="-">
         <span class="mt away"><span class="mflag">${ta.f}</span><span class="mname">${ta.n}</span></span>
+      </div>
+      <div class="wdl-row">
+        <button class="wdl-btn${r==='W'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="W">ホーム勝</button>
+        <button class="wdl-btn${r==='D'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="D">引分</button>
+        <button class="wdl-btn${r==='L'?' wdl-active':''}" data-g="${g}" data-mi="${mi}" data-r="L">アウェイ勝</button>
       </div>
     </div>`;
   }).join('');
@@ -666,7 +705,34 @@ function setupScoreInputs() {
       const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
       groupScores[g][mi][side] = v;
       bracketPicks = new Array(32).fill(null);
-      // Update each card's team-list in place to keep score input focused
+      // Reflect score result on WDL buttons without re-render
+      const r = getEffectiveResult(g, mi);
+      document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
+        b.classList.toggle('wdl-active', b.dataset.r === r);
+      });
+      GKEYS.forEach(gk => updateStandingsDom(gk));
+      updateThirdCounter();
+      renderBracket();
+      saveState();
+    });
+  });
+}
+
+function setupWdlButtons() {
+  document.querySelectorAll('.wdl-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const g = btn.dataset.g;
+      const mi = parseInt(btn.dataset.mi);
+      const r = btn.dataset.r;
+      // Clear score so WDL takes effect
+      groupScores[g][mi] = [null, null];
+      document.querySelectorAll(`.sc-in[data-g="${g}"][data-mi="${mi}"]`).forEach(inp => inp.value = '');
+      // Toggle: click active button again to deselect
+      groupWdl[g][mi] = groupWdl[g][mi] === r ? null : r;
+      document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
+        b.classList.toggle('wdl-active', b.dataset.r === groupWdl[g][mi]);
+      });
+      bracketPicks = new Array(32).fill(null);
       GKEYS.forEach(gk => updateStandingsDom(gk));
       updateThirdCounter();
       renderBracket();
@@ -822,26 +888,31 @@ function makeFinalCol() {
 }
 
 // ===== SHARE =====
-// Encode each group's 6 scores as a compact string like "2-1,0-0,,3-2,..."
+// Encode each group's 6 matches: "2-1" for score, "W"/"D"/"L" for WDL-only, "" for empty
 function encodeScores() {
-  return GKEYS.map(g => groupScores[g].map(sc => {
-    if (sc[0] === null || sc[1] === null) return '';
-    return sc[0] + '-' + sc[1];
+  return GKEYS.map(g => groupScores[g].map((sc, mi) => {
+    if (sc[0] !== null && sc[1] !== null) return sc[0] + '-' + sc[1];
+    return groupWdl[g][mi] || '';
   }).join(',')).join('|');
 }
 function decodeScores(s) {
-  const result = {};
+  const scores = {}, wdl = {};
   const parts = s.split('|');
   GKEYS.forEach((g, i) => {
-    result[g] = new Array(6).fill(null).map(()=>[null,null]);
+    scores[g] = new Array(6).fill(null).map(() => [null, null]);
+    wdl[g] = new Array(6).fill(null);
     if (!parts[i]) return;
     parts[i].split(',').forEach((m, mi) => {
       if (!m) return;
-      const [a, b] = m.split('-').map(Number);
-      if (!isNaN(a) && !isNaN(b)) result[g][mi] = [a, b];
+      if (m === 'W' || m === 'D' || m === 'L') {
+        wdl[g][mi] = m;
+      } else {
+        const [a, b] = m.split('-').map(Number);
+        if (!isNaN(a) && !isNaN(b)) scores[g][mi] = [a, b];
+      }
     });
   });
-  return result;
+  return { scores, wdl };
 }
 
 function generateUrl() {
@@ -858,7 +929,7 @@ function loadFromUrl() {
   try {
     const json = decodeURIComponent(escape(atob(p)));
     const data = JSON.parse(json);
-    if (data.s) groupScores = decodeScores(data.s);
+    if (data.s) { const d = decodeScores(data.s); groupScores = d.scores; groupWdl = d.wdl; }
     if (data.b) bracketPicks = data.b;
   } catch(e) { console.error('Failed to load state from URL', e); }
 }
@@ -882,7 +953,10 @@ function copyUrl() {
 
 function resetAll() {
   if (!confirm('全ての予想をリセットしますか？')) return;
-  GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null]));
+  GKEYS.forEach(g => {
+    groupScores[g] = new Array(6).fill(null).map(() => [null, null]);
+    groupWdl[g] = new Array(6).fill(null);
+  });
   bracketPicks = new Array(32).fill(null);
   renderGroups();
   renderBracket();
