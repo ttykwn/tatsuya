@@ -73,10 +73,9 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .team-list { padding: 6px; }
 .team-row {
   display: flex; align-items: center; gap: 8px;
-  padding: 7px 8px;
+  padding: 6px 8px;
   border-radius: 7px;
   margin-bottom: 3px;
-  cursor: grab;
   user-select: none;
   border: 1px solid transparent;
   transition: background 0.15s;
@@ -96,14 +95,28 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .team-flag { font-size: 1.2rem; flex-shrink: 0; line-height: 1; }
 .team-name { font-size: 0.8rem; flex: 1; }
 .drag-icon { color: var(--muted); font-size: 0.7rem; }
-.third-btn {
-  font-size: 0.65rem; padding: 2px 7px; border-radius: 10px;
-  border: 1px solid rgba(200,168,75,0.4); background: none;
-  color: var(--muted); cursor: pointer; white-space: nowrap;
-  transition: all 0.2s;
+.team-stat { font-size: 0.65rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+.adv-mark { font-size: 0.6rem; color: var(--accent); padding: 1px 5px; border: 1px solid var(--accent); border-radius: 8px; white-space: nowrap; }
+
+/* Matches inside group card */
+.matches { border-top: 1px solid var(--border); padding: 6px 6px 8px; }
+.match-row { padding: 5px 2px; border-bottom: 1px dashed rgba(255,255,255,0.04); }
+.match-row:last-child { border-bottom: none; }
+.md-tag { font-size: 0.6rem; color: var(--muted); display: block; margin-bottom: 2px; padding-left: 4px; }
+.match-line { display: flex; align-items: center; gap: 4px; }
+.mt { display: flex; align-items: center; gap: 4px; flex: 1; font-size: 0.72rem; min-width: 0; }
+.mt.home { justify-content: flex-end; text-align: right; }
+.mt.away { justify-content: flex-start; }
+.mt span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-in {
+  width: 32px; height: 26px; text-align: center;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text); font-size: 0.85rem;
+  font-weight: bold; padding: 0; -moz-appearance: textfield;
 }
-.third-btn:hover { border-color: var(--accent); color: var(--accent); }
-.third-btn.on { background: rgba(200,168,75,0.15); border-color: var(--accent); color: var(--accent); }
+.sc-in::-webkit-outer-spin-button, .sc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.sc-in:focus { outline: none; border-color: var(--accent); }
+.sc-sep { color: var(--muted); font-size: 0.7rem; }
 
 /* Third place */
 .third-wrap { max-width: 750px; margin: 0 auto; }
@@ -250,7 +263,7 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 </nav>
 
 <div id="tab-groups" class="tab-pane active">
-  <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">ドラッグで順位を変更。3位チームの「進出」ボタンで決勝T進出を予想（8チームまで）。<span id="thirdCounter" style="color:var(--accent);margin-left:6px;">3位通過: 0/8</span></div>
+  <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">各試合のスコアを入力すると順位が自動計算され、3位通過8チームも自動で決まります。<span id="thirdCounter" style="color:var(--muted);margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
@@ -295,6 +308,23 @@ const GROUPS = {
 };
 const GKEYS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
+// Match fixtures: [homeTeamIdx, awayTeamIdx, date, matchday]
+// Indexes correspond to GROUPS[g] order
+const GROUP_MATCHES = {
+  A: [[0,2,'6/11','MD1'],[3,1,'6/11','MD1'],[1,2,'6/18','MD2'],[0,3,'6/18','MD2'],[1,0,'6/24','MD3'],[2,3,'6/24','MD3']],
+  B: [[0,2,'6/12','MD1'],[1,3,'6/12','MD1'],[2,1,'6/18','MD2'],[0,3,'6/18','MD2'],[2,0,'6/24','MD3'],[3,1,'6/24','MD3']],
+  C: [[0,2,'6/12','MD1'],[3,1,'6/13','MD1'],[1,2,'6/19','MD2'],[0,3,'6/19','MD2'],[2,0,'6/25','MD3'],[3,1,'6/25','MD3']],
+  D: [[0,2,'6/13','MD1'],[1,3,'6/13','MD1'],[2,1,'6/19','MD2'],[0,3,'6/19','MD2'],[2,0,'6/25','MD3'],[3,1,'6/25','MD3']],
+  E: [[0,2,'6/14','MD1'],[1,3,'6/14','MD1'],[2,1,'6/20','MD2'],[0,3,'6/20','MD2'],[3,0,'6/26','MD3'],[2,1,'6/26','MD3']],
+  F: [[0,2,'6/14','MD1'],[1,3,'6/14','MD1'],[2,1,'6/20','MD2'],[0,3,'6/20','MD2'],[3,0,'6/26','MD3'],[2,1,'6/26','MD3']],
+  G: [[0,2,'6/15','MD1'],[1,3,'6/15','MD1'],[2,1,'6/21','MD2'],[0,3,'6/21','MD2'],[3,0,'6/27','MD3'],[2,1,'6/27','MD3']],
+  H: [[0,2,'6/15','MD1'],[1,3,'6/15','MD1'],[2,1,'6/21','MD2'],[0,3,'6/21','MD2'],[3,0,'6/27','MD3'],[2,1,'6/27','MD3']],
+  I: [[0,2,'6/16','MD1'],[1,3,'6/16','MD1'],[2,1,'6/22','MD2'],[0,3,'6/22','MD2'],[3,0,'6/27','MD3'],[2,1,'6/27','MD3']],
+  J: [[0,2,'6/16','MD1'],[1,3,'6/17','MD1'],[2,1,'6/22','MD2'],[0,3,'6/23','MD2'],[3,0,'6/27','MD3'],[2,1,'6/27','MD3']],
+  K: [[0,2,'6/17','MD1'],[1,3,'6/17','MD1'],[2,1,'6/23','MD2'],[0,3,'6/23','MD2'],[3,0,'6/27','MD3'],[2,1,'6/27','MD3']],
+  L: [[0,2,'6/17','MD1'],[1,3,'6/17','MD1'],[2,1,'6/23','MD2'],[0,3,'6/23','MD2'],[3,0,'6/27','MD3'],[2,1,'6/27','MD3']],
+};
+
 // R32 bracket: [slot1, slot2]
 // slots: '1X' = 1st in group X, '2X' = 2nd, 't3N' = Nth advancing 3rd-place
 const R32_DEF = [
@@ -305,25 +335,61 @@ const R32_DEF = [
 ];
 
 // ===== STATE =====
-let rankings = {};
-GKEYS.forEach(g => rankings[g] = [0,1,2,3]);
-let thirdAdvancing = [];   // array of group keys (max 8)
+// groupScores[g] = array of 6 [homeScore, awayScore] or null for unset
+let groupScores = {};
+GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null]));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
+
+// ===== STANDINGS CALCULATION =====
+// Returns array of 4 objects sorted by standing: {idx, pts, gd, gf, ga, w, d, l}
+function getStandings(g) {
+  const stats = [0,1,2,3].map(i => ({idx:i, pts:0, gd:0, gf:0, ga:0, w:0, d:0, l:0}));
+  GROUP_MATCHES[g].forEach((m, mi) => {
+    const sc = groupScores[g][mi];
+    if (sc[0] === null || sc[1] === null) return;
+    const [h, a] = [m[0], m[1]];
+    stats[h].gf += sc[0]; stats[h].ga += sc[1];
+    stats[a].gf += sc[1]; stats[a].ga += sc[0];
+    if (sc[0] > sc[1]) { stats[h].pts += 3; stats[h].w++; stats[a].l++; }
+    else if (sc[0] < sc[1]) { stats[a].pts += 3; stats[a].w++; stats[h].l++; }
+    else { stats[h].pts++; stats[a].pts++; stats[h].d++; stats[a].d++; }
+  });
+  stats.forEach(s => s.gd = s.gf - s.ga);
+  // FIFA tiebreakers: pts, gd, gf, then stable by original idx
+  stats.sort((a,b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.idx - b.idx);
+  return stats;
+}
+
+// Returns true if all 6 matches in group g have scores entered
+function isGroupComplete(g) {
+  return groupScores[g].every(sc => sc[0] !== null && sc[1] !== null);
+}
+
+// Returns array of group keys whose 3rd-place team advances (best 8 of 12)
+function getThirdAdvancing() {
+  const all = GKEYS.filter(isGroupComplete).map(g => {
+    const s = getStandings(g)[2];
+    return {g, pts:s.pts, gd:s.gd, gf:s.gf};
+  });
+  all.sort((a,b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.g.localeCompare(b.g));
+  return all.slice(0, 8).map(x => x.g);
+}
 
 // ===== HELPERS =====
 function getTeam(slot) {
   if (!slot) return null;
   if (slot.startsWith('t3')) {
     const i = parseInt(slot.slice(2));
-    if (i >= thirdAdvancing.length) return null;
-    const g = thirdAdvancing[i];
-    const idx = rankings[g][2];
+    const advancing = getThirdAdvancing();
+    if (i >= advancing.length) return null;
+    const g = advancing[i];
+    const idx = getStandings(g)[2].idx;
     return GROUPS[g][idx];
   }
   const pos = parseInt(slot[0]) - 1;
   const g = slot[1];
-  if (!rankings[g]) return null;
-  const idx = rankings[g][pos];
+  if (!isGroupComplete(g)) return null;
+  const idx = getStandings(g)[pos].idx;
   return GROUPS[g][idx];
 }
 
@@ -383,54 +449,62 @@ function getDependentMatches(matchIdx) {
 function renderGroups() {
   const el = document.getElementById('groupsGrid');
   el.innerHTML = GKEYS.map(g => renderGroupCard(g)).join('');
-  setupGroupDrag();
+  setupScoreInputs();
+  updateThirdCounter();
 }
 
 function renderGroupCard(g) {
-  const teams = rankings[g].map((idx, pos) => {
-    const t = GROUPS[g][idx];
+  const complete = isGroupComplete(g);
+  const standings = getStandings(g);
+  const thirdAdvList = getThirdAdvancing();
+  const thirdIsAdvancing = thirdAdvList.includes(g);
+
+  const rows = standings.map((s, pos) => {
+    const t = GROUPS[g][s.idx];
     const cls = ['rank-1','rank-2','rank-3','rank-4'][pos];
-    const isThird = pos === 2;
-    const advancing = thirdAdvancing.includes(g);
-    const thirdFull = thirdAdvancing.length >= 8;
-    const thirdBtn = isThird
-      ? `<button class="third-btn ${advancing ? 'on' : ''}" onclick="toggleThird('${g}');event.stopPropagation();" ${!advancing && thirdFull ? 'disabled style="opacity:0.3"' : ''}>${advancing ? '✓ 進出' : '進出?'}</button>`
-      : '';
-    return `<div class="team-row ${cls}" draggable="true" data-group="${g}" data-pos="${pos}">
+    const note = pos === 2 && complete && thirdIsAdvancing ? '<span class="adv-mark">✓進出</span>' : '';
+    return `<div class="team-row ${cls}">
       <span class="rank-num">${pos+1}</span>
       <span class="team-flag">${t.f}</span>
       <span class="team-name">${t.n}</span>
-      ${thirdBtn}
-      <span class="drag-icon">⠿</span>
+      ${note}
+      <span class="team-stat">${s.pts}pt ${s.gd>=0?'+':''}${s.gd}</span>
     </div>`;
   }).join('');
+
+  const matches = GROUP_MATCHES[g].map((m, mi) => {
+    const th = GROUPS[g][m[0]];
+    const ta = GROUPS[g][m[1]];
+    const sc = groupScores[g][mi];
+    const h = sc[0] === null ? '' : sc[0];
+    const a = sc[1] === null ? '' : sc[1];
+    return `<div class="match-row">
+      <span class="md-tag">${m[3]} ${m[2]}</span>
+      <div class="match-line">
+        <span class="mt home"><span>${th.f}</span><span>${th.n}</span></span>
+        <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="0" value="${h}" placeholder="-">
+        <span class="sc-sep">–</span>
+        <input type="number" min="0" max="99" class="sc-in" data-g="${g}" data-mi="${mi}" data-side="1" value="${a}" placeholder="-">
+        <span class="mt away"><span>${ta.n}</span><span>${ta.f}</span></span>
+      </div>
+    </div>`;
+  }).join('');
+
   return `<div class="group-card">
-    <div class="group-head"><span>グループ ${g}</span><small>${rankings[g].map(i=>GROUPS[g][i].n).slice(0,2).join(' / ')} 通過予想</small></div>
-    <div class="team-list" id="tl-${g}">${teams}</div>
+    <div class="group-head"><span>グループ ${g}</span><small>${complete ? GROUPS[g][standings[0].idx].n+' / '+GROUPS[g][standings[1].idx].n+' 通過' : '未入力'}</small></div>
+    <div class="team-list">${rows}</div>
+    <div class="matches">${matches}</div>
   </div>`;
 }
 
-let dragSrc = null;
-function setupGroupDrag() {
-  document.querySelectorAll('.team-row').forEach(row => {
-    row.addEventListener('dragstart', e => {
-      dragSrc = {g: row.dataset.group, pos: parseInt(row.dataset.pos)};
-      row.style.opacity = '0.4';
-    });
-    row.addEventListener('dragend', e => { row.style.opacity = ''; });
-    row.addEventListener('dragover', e => { e.preventDefault(); row.classList.add('drag-over'); });
-    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
-    row.addEventListener('drop', e => {
-      e.preventDefault();
-      row.classList.remove('drag-over');
-      if (!dragSrc) return;
-      const destG = row.dataset.group;
-      const destPos = parseInt(row.dataset.pos);
-      if (dragSrc.g !== destG || dragSrc.pos === destPos) return;
-      const arr = rankings[destG];
-      const tmp = arr[dragSrc.pos];
-      arr[dragSrc.pos] = arr[destPos];
-      arr[destPos] = tmp;
+function setupScoreInputs() {
+  document.querySelectorAll('.sc-in').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const g = inp.dataset.g;
+      const mi = parseInt(inp.dataset.mi);
+      const side = parseInt(inp.dataset.side);
+      const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
+      groupScores[g][mi][side] = v;
       bracketPicks = new Array(32).fill(null);
       renderGroups();
       renderBracket();
@@ -439,29 +513,14 @@ function setupGroupDrag() {
   });
 }
 
-// ===== UPDATE THIRD COUNTER =====
-function renderThird() {
+function updateThirdCounter() {
   const counter = document.getElementById('thirdCounter');
   if (counter) {
-    const n = thirdAdvancing.length;
-    counter.textContent = `3位通過: ${n}/8`;
-    counter.style.color = n === 8 ? 'var(--accent)' : 'var(--muted)';
+    const n = getThirdAdvancing().length;
+    const completedGroups = GKEYS.filter(isGroupComplete).length;
+    counter.textContent = `完了グループ ${completedGroups}/12 ・ 3位通過 ${n}/8`;
+    counter.style.color = completedGroups === 12 ? 'var(--accent)' : 'var(--muted)';
   }
-}
-
-function toggleThird(g) {
-  const idx = thirdAdvancing.indexOf(g);
-  if (idx >= 0) {
-    thirdAdvancing.splice(idx, 1);
-    bracketPicks = new Array(32).fill(null);
-  } else {
-    if (thirdAdvancing.length >= 8) return;
-    thirdAdvancing.push(g);
-  }
-  renderGroups();
-  renderThird();
-  renderBracket();
-  saveState();
 }
 
 // ===== RENDER BRACKET =====
@@ -578,13 +637,30 @@ function makeFinalCol() {
 }
 
 // ===== SHARE =====
+// Encode each group's 6 scores as a compact string like "2-1,0-0,,3-2,..."
+function encodeScores() {
+  return GKEYS.map(g => groupScores[g].map(sc => {
+    if (sc[0] === null || sc[1] === null) return '';
+    return sc[0] + '-' + sc[1];
+  }).join(',')).join('|');
+}
+function decodeScores(s) {
+  const result = {};
+  const parts = s.split('|');
+  GKEYS.forEach((g, i) => {
+    result[g] = new Array(6).fill(null).map(()=>[null,null]);
+    if (!parts[i]) return;
+    parts[i].split(',').forEach((m, mi) => {
+      if (!m) return;
+      const [a, b] = m.split('-').map(Number);
+      if (!isNaN(a) && !isNaN(b)) result[g][mi] = [a, b];
+    });
+  });
+  return result;
+}
+
 function generateUrl() {
-  const data = {
-    r: {},
-    t: thirdAdvancing,
-    b: bracketPicks,
-  };
-  GKEYS.forEach(g => data.r[g] = rankings[g]);
+  const data = { s: encodeScores(), b: bracketPicks };
   const json = JSON.stringify(data);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   return location.href.split('?')[0] + '?p=' + b64;
@@ -597,8 +673,7 @@ function loadFromUrl() {
   try {
     const json = decodeURIComponent(escape(atob(p)));
     const data = JSON.parse(json);
-    if (data.r) GKEYS.forEach(g => { if (data.r[g]) rankings[g] = data.r[g]; });
-    if (data.t) thirdAdvancing = data.t;
+    if (data.s) groupScores = decodeScores(data.s);
     if (data.b) bracketPicks = data.b;
   } catch(e) { console.error('Failed to load state from URL', e); }
 }
@@ -622,8 +697,7 @@ function copyUrl() {
 
 function resetAll() {
   if (!confirm('全ての予想をリセットしますか？')) return;
-  GKEYS.forEach(g => rankings[g] = [0,1,2,3]);
-  thirdAdvancing = [];
+  GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null]));
   bracketPicks = new Array(32).fill(null);
   renderGroups();
   renderBracket();
