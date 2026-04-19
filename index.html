@@ -394,12 +394,19 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .sch-day-count { font-size: 0.7rem; color: var(--muted); font-weight: 400; }
 .sch-match {
   display: grid;
-  grid-template-columns: 50px 1fr 32px;
-  align-items: center; gap: 10px;
+  grid-template-columns: 1fr 32px;
+  grid-template-rows: auto auto;
+  align-items: center; column-gap: 10px; row-gap: 3px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   cursor: pointer; transition: background 0.15s;
 }
+.sch-time-wrap {
+  grid-column: 1; grid-row: 1;
+  display: flex; align-items: baseline; gap: 8px;
+  min-width: 0;
+}
+.sch-star { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 .sch-match:last-child { border-bottom: none; }
 .sch-match:hover { background: rgba(255,255,255,0.03); }
 .sch-match.selected {
@@ -407,12 +414,18 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   border-left: 3px solid var(--accent);
   padding-left: 11px;
 }
-.sch-time { color: var(--accent); font-weight: 600; font-size: 0.85rem; }
-.sch-content { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sch-time { color: var(--accent); font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
+.sch-content {
+  grid-column: 1; grid-row: 2;
+  display: flex; flex-direction: column; gap: 3px; min-width: 0;
+}
 .sch-teams { font-size: 0.85rem; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .sch-teams .vs { color: var(--muted); font-size: 0.7rem; }
 .sch-meta { font-size: 0.68rem; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.sch-venue { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.sch-venue {
+  font-size: 0.68rem; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
 .sch-round-badge {
   background: rgba(74,159,224,0.15); color: #4a9fe0;
   padding: 1px 6px; border-radius: 3px; font-size: 0.65rem;
@@ -471,11 +484,12 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 }
 .sch-star.on { color: var(--accent); }
 @media (max-width: 600px) {
-  .sch-match { grid-template-columns: 44px 1fr 28px; gap: 6px; padding: 8px 10px; }
+  .sch-match { grid-template-columns: 1fr 28px; column-gap: 6px; padding: 8px 10px; }
   .sch-match.selected { padding-left: 7px; }
   .sch-match.japan { padding-left: 7px; }
   .sch-match.predict { padding-left: 7px; }
   .sch-time { font-size: 0.78rem; }
+  .sch-venue { font-size: 0.65rem; }
   .sch-teams { font-size: 0.78rem; }
   .sch-watching-item { font-size: 0.7rem; gap: 5px; padding: 5px 8px; }
   .sch-watching-item .sch-w-remove { font-size: 0.85rem; padding: 0 2px; }
@@ -525,7 +539,12 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   }
   .sch-match.selected { border-left-width: 3px; padding-left: 3px; }
   .sch-match.japan { padding-left: 3px; }
-  .sch-time { grid-column: 1; grid-row: 1; font-size: 0.65rem; align-self: center; }
+  .sch-time-wrap {
+    grid-column: 1; grid-row: 1;
+    gap: 4px; align-items: center; min-width: 0;
+  }
+  .sch-time { font-size: 0.65rem; }
+  .sch-venue { font-size: 0.58rem; }
   .sch-star { grid-column: 2; grid-row: 1; font-size: 0.95rem; }
   .sch-content { grid-column: 1 / -1; grid-row: 2; }
   .sch-teams { font-size: 0.65rem; flex-direction: column; gap: 1px; align-items: flex-start; }
@@ -1758,7 +1777,10 @@ function renderSchedule() {
       const isPredict = mt.roundType === 'bracket';
       return `
         <div class="sch-match${isOn?' selected':''}${isJp?' japan':''}${isPredict?' predict':''}" onclick="toggleWatching('${mt.id}')">
-          <div class="sch-time">${mt.jst}</div>
+          <div class="sch-time-wrap">
+            <span class="sch-time">${mt.jst}</span>
+            <span class="sch-venue">📍 ${mt.venue}</span>
+          </div>
           <div class="sch-content">
             <div class="sch-teams">
               <span>${mt.team1.flag}${mt.team1.text}</span>
@@ -1769,7 +1791,6 @@ function renderSchedule() {
             <div class="sch-meta">
               <span class="sch-round-badge">${mt.round}</span>
               ${isPredict?'<span class="sch-predict-badge">予想対戦</span>':''}
-              <span class="sch-venue">📍 ${mt.venue}</span>
             </div>
           </div>
           <button class="sch-star${isOn?' on':''}" onclick="event.stopPropagation();toggleWatching('${mt.id}')" title="観戦予定に追加">${isOn?'★':'☆'}</button>
