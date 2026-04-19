@@ -464,10 +464,12 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   border-left-color: #ff6060;
 }
 .sch-japan-badge {
+  display: inline-block;
   background: linear-gradient(90deg, #e04040, #c02020);
   color: #fff; font-weight: 700;
-  padding: 1px 7px; border-radius: 3px; font-size: 0.65rem;
+  padding: 1px 6px; border-radius: 3px; font-size: 0.6rem;
   letter-spacing: 0.02em;
+  margin-left: 5px; vertical-align: middle;
   animation: jpPulse 2s ease-in-out infinite;
 }
 .sch-watching-item.japan {
@@ -1783,10 +1785,9 @@ function renderSchedule() {
           </div>
           <div class="sch-content">
             <div class="sch-teams">
-              <span>${mt.team1.flag}${mt.team1.text}</span>
+              <span>${mt.team1.flag}${mt.team1.text}${mt.team1.text==='日本'?'<span class="sch-japan-badge">応援!</span>':''}</span>
               <span class="vs">vs</span>
-              <span>${mt.team2.flag}${mt.team2.text}</span>
-              ${isJp?'<span class="sch-japan-badge">応援!</span>':''}
+              <span>${mt.team2.flag}${mt.team2.text}${mt.team2.text==='日本'?'<span class="sch-japan-badge">応援!</span>':''}</span>
             </div>
             <div class="sch-meta">
               <span class="sch-round-badge">${mt.round}</span>
