@@ -203,7 +203,13 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .third-card.selected .third-check { visibility: visible; }
 
 /* Bracket */
-.bracket-wrap { overflow: hidden; padding-bottom: 10px; }
+.bracket-wrap {
+  overflow: auto;
+  padding-bottom: 10px;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+.bracket-sizer { position: relative; }
 .bracket {
   display: flex;
   gap: 0;
@@ -354,7 +360,9 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">チームをクリックして勝者を選択。もう一度クリックで解除。</div>
   <div class="bracket-wrap">
-    <div class="bracket" id="bracket"></div>
+    <div class="bracket-sizer">
+      <div class="bracket" id="bracket"></div>
+    </div>
   </div>
 </div>
 
@@ -1241,28 +1249,72 @@ function postToX() {
   window.open(intent, '_blank', 'noopener,noreferrer');
 }
 
-// ===== BRACKET AUTO-FIT =====
+// ===== BRACKET AUTO-FIT & PINCH ZOOM =====
+let bracketBaseScale = 1;
+let bracketUserZoom = 1;
+
+function applyBracketScale() {
+  const bracket = document.getElementById('bracket');
+  const sizer = document.querySelector('.bracket-sizer');
+  if (!bracket || !sizer) return;
+  const naturalW = bracket.scrollWidth;
+  const naturalH = bracket.scrollHeight;
+  const scale = bracketBaseScale * bracketUserZoom;
+  bracket.style.transformOrigin = 'top left';
+  bracket.style.transform = `scale(${scale})`;
+  sizer.style.width = Math.ceil(naturalW * scale) + 'px';
+  sizer.style.height = Math.ceil(naturalH * scale) + 'px';
+}
+
 function autoScaleBracket() {
   requestAnimationFrame(() => {
     const bracket = document.getElementById('bracket');
     const wrap = document.querySelector('.bracket-wrap');
-    if (!bracket || !wrap) return;
-    // Reset to measure natural dimensions
+    const sizer = document.querySelector('.bracket-sizer');
+    if (!bracket || !wrap || !sizer) return;
     bracket.style.transform = '';
     bracket.style.transformOrigin = '';
-    wrap.style.height = '';
+    sizer.style.width = '';
+    sizer.style.height = '';
     const wrapW = wrap.getBoundingClientRect().width;
     const naturalW = bracket.scrollWidth;
-    const naturalH = bracket.scrollHeight;
     if (!wrapW || !naturalW) return;
-    if (naturalW <= wrapW) return;
-    const scale = wrapW / naturalW;
-    bracket.style.transformOrigin = 'top left';
-    bracket.style.transform = `scale(${scale})`;
-    wrap.style.height = Math.ceil(naturalH * scale) + 'px';
+    bracketBaseScale = naturalW > wrapW ? wrapW / naturalW : 1;
+    applyBracketScale();
   });
 }
 window.addEventListener('resize', autoScaleBracket);
+
+(function attachBracketPinch() {
+  const wrap = document.querySelector('.bracket-wrap');
+  if (!wrap) return;
+  let startDist = 0;
+  let startZoom = 1;
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      startDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      startZoom = bracketUserZoom;
+    }
+  }, { passive: true });
+  wrap.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && startDist > 0) {
+      e.preventDefault();
+      const d = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const next = startZoom * (d / startDist);
+      bracketUserZoom = Math.min(4, Math.max(1, next));
+      applyBracketScale();
+    }
+  }, { passive: false });
+  wrap.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) startDist = 0;
+  });
+})();
 
 // ===== INIT =====
 loadFromUrl();
