@@ -3,30 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIFA W杯 2026 予想</title>
+<title>FIFA World Cup 2026 予想ツール</title>
 <style>
 :root {
-  --bg: #0a0e1a;
-  --card: #141828;
-  --border: #2a3050;
-  --accent: #c8a84b;
-  --green: rgba(40,160,40,0.3);
-  --yellow: rgba(200,168,0,0.2);
-  --red: rgba(160,40,40,0.2);
-  --text: #e8eaf0;
-  --muted: #7a80a0;
+  --bg: #0f1118;
+  --card: #181b26;
+  --border: #252839;
+  --accent: #c9ab52;
+  --text: #dde0ea;
+  --muted: #6a7090;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
 header {
-  background: linear-gradient(135deg, #001238 0%, #003080 50%, #001238 100%);
-  padding: 18px 20px 14px;
+  background: var(--card);
+  padding: 14px 20px 12px;
   text-align: center;
-  border-bottom: 2px solid var(--accent);
+  border-bottom: 1px solid var(--border);
 }
-header h1 { font-size: 1.5rem; color: var(--accent); letter-spacing: 0.05em; }
-header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+header h1 { font-size: 1.3rem; color: var(--text); font-weight: 600; letter-spacing: 0.02em; }
+header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 
 .tabs {
   display: flex;
@@ -68,7 +65,6 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .group-card.selected {
   grid-row: span 3;
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
   cursor: default;
 }
 .group-card .matches { display: none; }
@@ -80,13 +76,14 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   overflow: hidden;
 }
 .group-head {
-  background: linear-gradient(90deg, #002060, #003090);
+  background: rgba(255,255,255,0.04);
   padding: 8px 14px;
   display: flex; align-items: center; justify-content: space-between;
   user-select: none; gap: 8px;
+  border-bottom: 1px solid var(--border);
 }
-.group-card:hover .group-head { background: linear-gradient(90deg, #002878, #003aaa); }
-.group-head span { font-size: 1rem; font-weight: bold; color: var(--accent); }
+.group-card:hover .group-head { background: rgba(255,255,255,0.07); }
+.group-head span { font-size: 0.95rem; font-weight: 600; color: var(--text); }
 .group-head small { font-size: 0.7rem; color: var(--muted); }
 
 /* Matches panel (inside score-panel only) */
@@ -102,10 +99,10 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
   transition: background 0.15s;
 }
 .team-row:last-child { margin-bottom: 0; }
-.team-row.rank-1 { background: var(--green); border-color: rgba(40,160,40,0.4); }
-.team-row.rank-2 { background: rgba(30,80,160,0.25); border-color: rgba(30,80,160,0.4); }
-.team-row.rank-3 { background: var(--yellow); border-color: rgba(200,168,0,0.3); }
-.team-row.rank-4 { background: var(--red); border-color: rgba(160,40,40,0.3); }
+.team-row.rank-1 { border-left: 3px solid rgba(60,180,80,0.6); }
+.team-row.rank-2 { border-left: 3px solid rgba(70,120,220,0.5); }
+.team-row.rank-3 { border-left: 3px solid rgba(190,155,40,0.5); }
+.team-row.rank-4 { border-left: 3px solid rgba(180,60,60,0.4); }
 .team-row.drag-over { outline: 2px solid var(--accent); }
 .rank-num {
   width: 20px; height: 20px; border-radius: 50%;
@@ -235,12 +232,12 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 }
 .bteam:hover { background: rgba(255,255,255,0.04); }
 .bteam:first-child { border-bottom: 1px solid var(--border); }
-.bteam.winner { background: rgba(40,160,40,0.2); }
+.bteam.winner { background: rgba(255,255,255,0.05); }
 .bteam.loser { opacity: 0.38; }
 .bt-flag { font-size: 0.95rem; flex-shrink: 0; }
 .bt-name { font-size: 0.72rem; flex: 1; line-height: 1.2; }
 .bt-empty { color: var(--muted); font-size: 0.7rem; font-style: italic; }
-.bt-win { color: #3c3; font-size: 0.65rem; margin-left: auto; }
+.bt-win { color: var(--accent); font-size: 0.65rem; margin-left: auto; }
 
 /* Final / Champion */
 .final-col {
@@ -288,7 +285,7 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .btn-gold:hover { background: #dbb85a; }
 .btn-ghost { background: var(--border); color: var(--text); margin-right: 8px; }
 .btn-ghost:hover { background: #3a4060; }
-.copy-ok { color: #3c3; font-size: 0.8rem; margin-top: 6px; display: none; }
+.copy-ok { color: var(--accent); font-size: 0.8rem; margin-top: 6px; display: none; }
 .reset-btn { color: #e04040; background: none; border: 1px solid #e04040; font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
 .reset-btn:hover { background: rgba(224,64,64,0.1); }
 
@@ -310,14 +307,14 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 <body>
 
 <header>
-  <h1>⚽ FIFA ワールドカップ 2026 予想</h1>
+  <h1>FIFA World Cup 2026 予想ツール</h1>
   <p>USA / Canada / Mexico &nbsp;|&nbsp; 48チーム・12グループ</p>
 </header>
 
 <nav class="tabs">
-  <div class="tab active" onclick="showTab('groups')">🏟️ グループステージ</div>
-  <div class="tab" onclick="showTab('bracket')">🏆 決勝トーナメント</div>
-  <div class="tab" onclick="showTab('share')">🔗 共有</div>
+  <div class="tab active" onclick="showTab('groups')">グループステージ</div>
+  <div class="tab" onclick="showTab('bracket')">決勝トーナメント</div>
+  <div class="tab" onclick="showTab('share')">共有</div>
 </nav>
 
 <div id="tab-groups" class="tab-pane active">
