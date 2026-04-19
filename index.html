@@ -1354,7 +1354,8 @@ window.addEventListener('resize', autoScaleBracket);
         e.touches[0].clientY - e.touches[1].clientY
       );
       const next = startZoom * (d / startDist);
-      bracketUserZoom = Math.min(4, Math.max(1, next));
+      const maxZoom = bracketBaseScale > 0 ? 1 / bracketBaseScale : 2;
+      bracketUserZoom = Math.min(maxZoom, Math.max(1, next));
       applyBracketScale();
     }
   }, { passive: false });
