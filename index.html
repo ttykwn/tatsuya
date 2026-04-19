@@ -591,7 +591,8 @@ GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null])
 let groupWdl = {};
 GKEYS.forEach(g => groupWdl[g] = new Array(6).fill(null));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
-let autoPredicted = false; // true while current state came purely from auto-predict
+function setAutoPredicted(val) { document.body && document.body.setAttribute('data-ap', val ? '1' : ''); }
+function isAutoPredicted() { return document.body && document.body.getAttribute('data-ap') === '1'; }
 
 // Returns effective result for a match: score-derived if score set, else stored WDL, else null
 function getEffectiveResult(g, mi) {
@@ -839,7 +840,7 @@ function setupScoreInputs() {
       const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
       groupScores[g][mi][side] = v;
       bracketPicks = new Array(32).fill(null);
-      autoPredicted = false;
+      setAutoPredicted(false);
       // Reflect score result on WDL buttons without re-render
       const r = getEffectiveResult(g, mi);
       document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
@@ -870,7 +871,7 @@ function setupWdlButtons() {
       });
       updateWdlBadges(g, mi, groupWdl[g][mi]);
       bracketPicks = new Array(32).fill(null);
-      autoPredicted = false;
+      setAutoPredicted(false);
       GKEYS.forEach(gk => updateStandingsDom(gk));
       updateThirdCounter();
       renderBracket();
@@ -958,7 +959,7 @@ function renderBracket() {
         bracketPicks[mi] = side;
         clearDependentPicks(mi);
       }
-      autoPredicted = false;
+      setAutoPredicted(false);
       renderBracket();
       saveState();
     });
@@ -1103,7 +1104,7 @@ function resetAll() {
     const sc = groupScores[g][mi];
     return (sc[0] !== null && sc[1] !== null) || groupWdl[g][mi] !== null;
   })) || bracketPicks.some(p => p !== null);
-  if (hasAny && !autoPredicted && !confirm('全ての予想をリセットしますか？')) return;
+  if (hasAny && !isAutoPredicted() && !confirm('全ての予想をリセットしますか？')) return;
   GKEYS.forEach(g => {
     groupScores[g] = new Array(6).fill(null).map(() => [null, null]);
     groupWdl[g] = new Array(6).fill(null);
@@ -1170,19 +1171,19 @@ function generateBracketPredictions() {
   }
 }
 function autoPredictGroups() {
-  if (hasAnyPredictions() && !autoPredicted && !confirm('全てのグループステージの予想を自動生成します。現在の予想は上書きされます。')) return;
+  if (hasAnyPredictions() && !isAutoPredicted() && !confirm('全てのグループステージの予想を自動生成します。現在の予想は上書きされます。')) return;
   generateGroupPredictions();
   bracketPicks = new Array(32).fill(null);
-  autoPredicted = true;
+  setAutoPredicted(true);
   renderGroups();
   renderBracket();
   saveState();
 }
 function autoPredictBracket() {
-  if (hasAnyPredictions() && !autoPredicted && !confirm('グループステージと決勝トーナメントの予想を自動生成します。現在の予想は上書きされます。')) return;
+  if (hasAnyPredictions() && !isAutoPredicted() && !confirm('グループステージと決勝トーナメントの予想を自動生成します。現在の予想は上書きされます。')) return;
   generateGroupPredictions();
   generateBracketPredictions();
-  autoPredicted = true;
+  setAutoPredicted(true);
   renderGroups();
   renderBracket();
   saveState();
