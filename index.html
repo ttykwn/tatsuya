@@ -96,6 +96,14 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .team-flag { font-size: 1.2rem; flex-shrink: 0; line-height: 1; }
 .team-name { font-size: 0.8rem; flex: 1; }
 .drag-icon { color: var(--muted); font-size: 0.7rem; }
+.third-btn {
+  font-size: 0.65rem; padding: 2px 7px; border-radius: 10px;
+  border: 1px solid rgba(200,168,75,0.4); background: none;
+  color: var(--muted); cursor: pointer; white-space: nowrap;
+  transition: all 0.2s;
+}
+.third-btn:hover { border-color: var(--accent); color: var(--accent); }
+.third-btn.on { background: rgba(200,168,75,0.15); border-color: var(--accent); color: var(--accent); }
 
 /* Third place */
 .third-wrap { max-width: 750px; margin: 0 auto; }
@@ -237,22 +245,13 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 
 <nav class="tabs">
   <div class="tab active" onclick="showTab('groups')">🏟️ グループステージ</div>
-  <div class="tab" onclick="showTab('third')">🥉 3位通過チーム</div>
   <div class="tab" onclick="showTab('bracket')">🏆 ノックアウト</div>
   <div class="tab" onclick="showTab('share')">🔗 共有</div>
 </nav>
 
 <div id="tab-groups" class="tab-pane active">
+  <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">ドラッグで順位を変更。3位チームの「進出」ボタンで決勝T進出を予想（8チームまで）。<span id="thirdCounter" style="color:var(--accent);margin-left:6px;">3位通過: 0/8</span></div>
   <div class="groups-grid" id="groupsGrid"></div>
-</div>
-
-<div id="tab-third" class="tab-pane">
-  <div class="third-wrap">
-    <div class="section-title">3位通過チームを選択</div>
-    <div class="section-sub">各グループ3位チームのうち8チームが決勝トーナメントに進出します。予想を選んでください。</div>
-    <div class="counter-badge" id="thirdCounter">0 / 8 選択中</div>
-    <div class="third-grid" id="thirdGrid"></div>
-  </div>
 </div>
 
 <div id="tab-bracket" class="tab-pane">
@@ -391,10 +390,17 @@ function renderGroupCard(g) {
   const teams = rankings[g].map((idx, pos) => {
     const t = GROUPS[g][idx];
     const cls = ['rank-1','rank-2','rank-3','rank-4'][pos];
+    const isThird = pos === 2;
+    const advancing = thirdAdvancing.includes(g);
+    const thirdFull = thirdAdvancing.length >= 8;
+    const thirdBtn = isThird
+      ? `<button class="third-btn ${advancing ? 'on' : ''}" onclick="toggleThird('${g}');event.stopPropagation();" ${!advancing && thirdFull ? 'disabled style="opacity:0.3"' : ''}>${advancing ? '✓ 進出' : '進出?'}</button>`
+      : '';
     return `<div class="team-row ${cls}" draggable="true" data-group="${g}" data-pos="${pos}">
       <span class="rank-num">${pos+1}</span>
       <span class="team-flag">${t.f}</span>
       <span class="team-name">${t.n}</span>
+      ${thirdBtn}
       <span class="drag-icon">⠿</span>
     </div>`;
   }).join('');
@@ -427,35 +433,20 @@ function setupGroupDrag() {
       arr[destPos] = tmp;
       bracketPicks = new Array(32).fill(null);
       renderGroups();
-      renderThird();
       renderBracket();
       saveState();
     });
   });
 }
 
-// ===== RENDER THIRD =====
+// ===== UPDATE THIRD COUNTER =====
 function renderThird() {
-  const el = document.getElementById('thirdGrid');
   const counter = document.getElementById('thirdCounter');
-  const n = thirdAdvancing.length;
-  counter.textContent = `${n} / 8 選択中`;
-  counter.className = 'counter-badge' + (n === 8 ? ' done' : '');
-
-  el.innerHTML = GKEYS.map(g => {
-    const idx = rankings[g][2];
-    const t = GROUPS[g][idx];
-    const sel = thirdAdvancing.includes(g);
-    const dis = !sel && n >= 8;
-    return `<div class="third-card ${sel?'selected':''} ${dis?'disabled':''}" onclick="toggleThird('${g}')">
-      <span style="font-size:1.2rem">${t.f}</span>
-      <div class="third-info">
-        <div class="third-name">${t.n}</div>
-        <div class="third-grp">グループ ${g} 3位</div>
-      </div>
-      <span class="third-check">✓</span>
-    </div>`;
-  }).join('');
+  if (counter) {
+    const n = thirdAdvancing.length;
+    counter.textContent = `3位通過: ${n}/8`;
+    counter.style.color = n === 8 ? 'var(--accent)' : 'var(--muted)';
+  }
 }
 
 function toggleThird(g) {
@@ -467,6 +458,7 @@ function toggleThird(g) {
     if (thirdAdvancing.length >= 8) return;
     thirdAdvancing.push(g);
   }
+  renderGroups();
   renderThird();
   renderBracket();
   saveState();
@@ -634,7 +626,6 @@ function resetAll() {
   thirdAdvancing = [];
   bracketPicks = new Array(32).fill(null);
   renderGroups();
-  renderThird();
   renderBracket();
   saveState();
 }
@@ -644,7 +635,7 @@ function showTab(id) {
   document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
-  const tabs = ['groups','third','bracket','share'];
+  const tabs = ['groups','bracket','share'];
   const i = tabs.indexOf(id);
   document.querySelectorAll('.tab')[i].classList.add('active');
   if (id === 'share') saveState();
@@ -653,7 +644,6 @@ function showTab(id) {
 // ===== INIT =====
 loadFromUrl();
 renderGroups();
-renderThird();
 renderBracket();
 </script>
 </body>
