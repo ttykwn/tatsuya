@@ -592,6 +592,10 @@ function setupGroupCards() {
       const g = card.dataset.g;
       openGroup = (openGroup === g) ? null : g;
       renderGroups();
+      if (openGroup && window.innerWidth <= 600) {
+        const sel = document.querySelector('.group-card.selected');
+        if (sel) sel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     });
   });
 }
