@@ -599,6 +599,7 @@ GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null])
 let groupWdl = {};
 GKEYS.forEach(g => groupWdl[g] = new Array(6).fill(null));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
+let manuallyEdited = false;
 
 // Returns effective result for a match: score-derived if score set, else stored WDL, else null
 function getEffectiveResult(g, mi) {
@@ -846,6 +847,7 @@ function setupScoreInputs() {
       const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
       groupScores[g][mi][side] = v;
       bracketPicks = new Array(32).fill(null);
+      manuallyEdited = true;
       // Reflect score result on WDL buttons without re-render
       const r = getEffectiveResult(g, mi);
       document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
@@ -871,6 +873,7 @@ function setupWdlButtons() {
       document.querySelectorAll(`.sc-in[data-g="${g}"][data-mi="${mi}"]`).forEach(inp => inp.value = '');
       // Toggle: click active button again to deselect
       groupWdl[g][mi] = groupWdl[g][mi] === r ? null : r;
+      manuallyEdited = true;
       document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
         b.classList.toggle('wdl-active', b.dataset.r === groupWdl[g][mi]);
       });
@@ -964,6 +967,7 @@ function renderBracket() {
         bracketPicks[mi] = side;
         clearDependentPicks(mi);
       }
+      manuallyEdited = true;
       renderBracket();
       saveState();
     });
@@ -1104,11 +1108,15 @@ function copyUrl() {
 }
 
 function resetAll() {
+  if (manuallyEdited && hasAnyPredictions()) {
+    if (!confirm('手動で入力した予想が全てリセットされます。よろしいですか？')) return;
+  }
   GKEYS.forEach(g => {
     groupScores[g] = new Array(6).fill(null).map(() => [null, null]);
     groupWdl[g] = new Array(6).fill(null);
   });
   bracketPicks = new Array(32).fill(null);
+  manuallyEdited = false;
   renderGroups();
   renderBracket();
   saveState();
@@ -1170,15 +1178,23 @@ function generateBracketPredictions() {
   }
 }
 function autoPredictGroups() {
+  if (manuallyEdited && hasAnyPredictions()) {
+    if (!confirm('手動で入力した予想が上書きされます。よろしいですか？')) return;
+  }
   generateGroupPredictions();
   bracketPicks = new Array(32).fill(null);
+  manuallyEdited = false;
   renderGroups();
   renderBracket();
   saveState();
 }
 function autoPredictBracket() {
+  if (manuallyEdited && hasAnyPredictions()) {
+    if (!confirm('手動で入力した予想が上書きされます。よろしいですか？')) return;
+  }
   generateGroupPredictions();
   generateBracketPredictions();
+  manuallyEdited = false;
   renderGroups();
   renderBracket();
   saveState();
