@@ -385,8 +385,12 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
       <h3>予想を共有する</h3>
       <div class="url-box" id="shareUrl">（ここにURLが生成されます）</div>
       <button class="btn btn-gold" onclick="copyUrl()">📋 URLをコピー</button>
-      <button class="btn btn-x" onclick="postToX()">𝕏 Xでポスト</button>
       <div class="copy-ok" id="copyOk">✓ コピーしました！</div>
+    </div>
+    <div class="share-card">
+      <h3>ポスト内容プレビュー</h3>
+      <div class="url-box" id="xPreview" style="white-space:pre-wrap;max-height:200px;"></div>
+      <button class="btn btn-x" onclick="postToX()">𝕏 でポスト</button>
     </div>
   </div>
 </div>
@@ -1154,7 +1158,7 @@ function showTab(id) {
   const tabs = ['groups','bracket','share'];
   const i = tabs.indexOf(id);
   document.querySelectorAll('.tab')[i].classList.add('active');
-  if (id === 'share') saveState();
+  if (id === 'share') { saveState(); updateXPreview(); }
   if (id === 'bracket') autoScaleBracket();
 }
 
@@ -1272,7 +1276,7 @@ function getJapanFinishText() {
   return map[r] || null;
 }
 
-function postToX() {
+function buildXPostText() {
   const champion = getWinner(30);
   const runnerUp = getLoser(30);
   const third = getWinner(31);
@@ -1284,7 +1288,18 @@ function postToX() {
   if (jp) lines.push(jp);
   lines.push('');
   lines.push('あなたも予想してみよう👇');
-  const text = lines.join('\n');
+  return lines.join('\n');
+}
+
+function updateXPreview() {
+  const el = document.getElementById('xPreview');
+  if (!el) return;
+  const hashtags = '#FIFAWorldCup2026 #WorldCup2026 #ワールドカップ #W杯 #W杯予想 #サッカー日本代表 #SAMURAIBLUE';
+  el.textContent = buildXPostText() + '\n\n' + hashtags;
+}
+
+function postToX() {
+  const text = buildXPostText();
   const url = generateUrl();
   const hashtags = 'FIFAWorldCup2026,WorldCup2026,ワールドカップ,W杯,W杯予想,サッカー日本代表,SAMURAIBLUE';
   const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
