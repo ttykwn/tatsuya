@@ -589,6 +589,7 @@ GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null])
 let groupWdl = {};
 GKEYS.forEach(g => groupWdl[g] = new Array(6).fill(null));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
+let autoPredicted = false; // true while current state came purely from auto-predict
 
 // Returns effective result for a match: score-derived if score set, else stored WDL, else null
 function getEffectiveResult(g, mi) {
@@ -836,6 +837,7 @@ function setupScoreInputs() {
       const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
       groupScores[g][mi][side] = v;
       bracketPicks = new Array(32).fill(null);
+      autoPredicted = false;
       // Reflect score result on WDL buttons without re-render
       const r = getEffectiveResult(g, mi);
       document.querySelectorAll(`.wdl-btn[data-g="${g}"][data-mi="${mi}"]`).forEach(b => {
@@ -866,6 +868,7 @@ function setupWdlButtons() {
       });
       updateWdlBadges(g, mi, groupWdl[g][mi]);
       bracketPicks = new Array(32).fill(null);
+      autoPredicted = false;
       GKEYS.forEach(gk => updateStandingsDom(gk));
       updateThirdCounter();
       renderBracket();
@@ -953,6 +956,7 @@ function renderBracket() {
         bracketPicks[mi] = side;
         clearDependentPicks(mi);
       }
+      autoPredicted = false;
       renderBracket();
       saveState();
     });
@@ -1163,17 +1167,19 @@ function generateBracketPredictions() {
   }
 }
 function autoPredictGroups() {
-  if (hasAnyPredictions() && !confirm('全てのグループステージの予想を自動生成します。現在の予想は上書きされます。')) return;
+  if (hasAnyPredictions() && !autoPredicted && !confirm('全てのグループステージの予想を自動生成します。現在の予想は上書きされます。')) return;
   generateGroupPredictions();
   bracketPicks = new Array(32).fill(null);
+  autoPredicted = true;
   renderGroups();
   renderBracket();
   saveState();
 }
 function autoPredictBracket() {
-  if (hasAnyPredictions() && !confirm('グループステージと決勝トーナメントの予想を自動生成します。現在の予想は上書きされます。')) return;
+  if (hasAnyPredictions() && !autoPredicted && !confirm('グループステージと決勝トーナメントの予想を自動生成します。現在の予想は上書きされます。')) return;
   generateGroupPredictions();
   generateBracketPredictions();
+  autoPredicted = true;
   renderGroups();
   renderBracket();
   saveState();
