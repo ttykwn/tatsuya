@@ -146,6 +146,20 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 .sc-in::-webkit-outer-spin-button, .sc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .sc-in:focus { outline: none; border-color: var(--accent); }
 .sc-sep { color: var(--muted); font-size: 0.7rem; flex-shrink: 0; }
+/* Bracket score inputs */
+.bscore-row {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 3px 6px; border-top: 1px solid var(--border);
+}
+.bsc-in {
+  width: 26px; height: 22px; text-align: center;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); font-size: 0.78rem;
+  font-weight: bold; padding: 0;
+  -moz-appearance: textfield;
+}
+.bsc-in::-webkit-outer-spin-button,.bsc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.bsc-in:focus { outline: none; border-color: var(--accent); }
 .wdl-btn {
   border: 1px solid var(--border); border-radius: 5px;
   background: transparent; color: var(--muted);
@@ -309,7 +323,7 @@ header p { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
 
 <nav class="tabs">
   <div class="tab active" onclick="showTab('groups')">🏟️ グループステージ</div>
-  <div class="tab" onclick="showTab('bracket')">🏆 ノックアウト</div>
+  <div class="tab" onclick="showTab('bracket')">🏆 決勝トーナメント</div>
   <div class="tab" onclick="showTab('share')">🔗 共有</div>
 </nav>
 
@@ -498,6 +512,17 @@ GKEYS.forEach(g => groupScores[g] = new Array(6).fill(null).map(()=>[null,null])
 let groupWdl = {};
 GKEYS.forEach(g => groupWdl[g] = new Array(6).fill(null));
 let bracketPicks = new Array(32).fill(null); // 0 or 1 per match index
+let bracketScores = new Array(32).fill(null).map(() => [null, null]);
+
+// Effective pick: score-derived when both scores set, else click-based
+function getEffectivePick(mi) {
+  const bs = bracketScores[mi];
+  if (bs[0] !== null && bs[1] !== null) {
+    if (bs[0] > bs[1]) return 0;
+    if (bs[1] > bs[0]) return 1;
+  }
+  return bracketPicks[mi];
+}
 
 // Returns effective result for a match: score-derived if score set, else stored WDL, else null
 function getEffectiveResult(g, mi) {
@@ -594,13 +619,13 @@ function getMatchTeams(matchIdx) {
 }
 
 function getWinner(matchIdx) {
-  const pick = bracketPicks[matchIdx];
+  const pick = getEffectivePick(matchIdx);
   if (pick === null) return null;
   return getMatchTeams(matchIdx)[pick];
 }
 
 function getLoser(matchIdx) {
-  const pick = bracketPicks[matchIdx];
+  const pick = getEffectivePick(matchIdx);
   if (pick === null) return null;
   return getMatchTeams(matchIdx)[1 - pick];
 }
@@ -832,6 +857,7 @@ function renderBracket() {
     el.addEventListener('click', () => {
       const mi = parseInt(el.dataset.match);
       const side = parseInt(el.dataset.side);
+      bracketScores[mi] = [null, null]; // clicking always clears score
       if (el.classList.contains('winner')) {
         bracketPicks[mi] = null;
         clearDependentPicks(mi);
@@ -845,15 +871,42 @@ function renderBracket() {
       saveState();
     });
   });
+  setupBracketScoreInputs();
+}
+
+function setupBracketScoreInputs() {
+  document.querySelectorAll('.bsc-in').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const mi = parseInt(inp.dataset.match);
+      const side = parseInt(inp.dataset.side);
+      const v = inp.value === '' ? null : Math.max(0, Math.min(99, parseInt(inp.value) || 0));
+      bracketScores[mi][side] = v;
+      // Auto-pick winner from score (unless draw)
+      const bs = bracketScores[mi];
+      if (bs[0] !== null && bs[1] !== null && bs[0] !== bs[1]) {
+        bracketPicks[mi] = bs[0] > bs[1] ? 0 : 1;
+        clearDependentPicks(mi);
+      }
+      renderBracket();
+      saveState();
+    });
+  });
 }
 
 function makeRoundCol(title, matchIndices) {
   const matches = matchIndices.map(mi => {
     const [t1, t2] = getMatchTeams(mi);
-    const pick = bracketPicks[mi];
+    const bs = bracketScores[mi];
+    const h = bs[0] !== null ? bs[0] : '';
+    const a = bs[1] !== null ? bs[1] : '';
     return `<div class="bmatch">
-      ${makeTeamSlot(t1, mi, 0, pick)}
-      ${makeTeamSlot(t2, mi, 1, pick)}
+      ${makeTeamSlot(t1, mi, 0)}
+      ${makeTeamSlot(t2, mi, 1)}
+      <div class="bscore-row">
+        <input type="number" min="0" max="99" class="bsc-in" data-match="${mi}" data-side="0" value="${h}" placeholder="-">
+        <span class="sc-sep">–</span>
+        <input type="number" min="0" max="99" class="bsc-in" data-match="${mi}" data-side="1" value="${a}" placeholder="-">
+      </div>
     </div>`;
   }).join('');
   return `<div class="bround">
@@ -862,7 +915,8 @@ function makeRoundCol(title, matchIndices) {
   </div>`;
 }
 
-function makeTeamSlot(team, mi, side, pick) {
+function makeTeamSlot(team, mi, side) {
+  const pick = getEffectivePick(mi);
   if (!team) {
     return `<div class="bteam" data-match="${mi}" data-side="${side}">
       <span class="bt-empty">TBD</span>
@@ -878,13 +932,22 @@ function makeTeamSlot(team, mi, side, pick) {
   </div>`;
 }
 
+function bScoreRow(mi) {
+  const bs = bracketScores[mi];
+  const h = bs[0] !== null ? bs[0] : '';
+  const a = bs[1] !== null ? bs[1] : '';
+  return `<div class="bscore-row">
+    <input type="number" min="0" max="99" class="bsc-in" data-match="${mi}" data-side="0" value="${h}" placeholder="-">
+    <span class="sc-sep">–</span>
+    <input type="number" min="0" max="99" class="bsc-in" data-match="${mi}" data-side="1" value="${a}" placeholder="-">
+  </div>`;
+}
+
 function makeFinalCol() {
   const champion = getWinner(30);
   const third = getWinner(31);
   const [ft1, ft2] = getMatchTeams(30);
   const [tp1, tp2] = getMatchTeams(31);
-  const fpick = bracketPicks[30];
-  const tpick = bracketPicks[31];
   return `<div class="final-col">
     <div class="champion-box">
       <div class="trophy">🏆</div>
@@ -894,15 +957,17 @@ function makeFinalCol() {
     <div class="final-match-wrap">
       <div class="bround-head" style="margin-bottom:4px">決勝</div>
       <div class="bmatch">
-        ${makeTeamSlot(ft1, 30, 0, fpick)}
-        ${makeTeamSlot(ft2, 30, 1, fpick)}
+        ${makeTeamSlot(ft1, 30, 0)}
+        ${makeTeamSlot(ft2, 30, 1)}
+        ${bScoreRow(30)}
       </div>
     </div>
     <div class="final-match-wrap">
       <div class="bround-head" style="margin-bottom:4px">3位決定戦</div>
       <div class="bmatch">
-        ${makeTeamSlot(tp1, 31, 0, tpick)}
-        ${makeTeamSlot(tp2, 31, 1, tpick)}
+        ${makeTeamSlot(tp1, 31, 0)}
+        ${makeTeamSlot(tp2, 31, 1)}
+        ${bScoreRow(31)}
       </div>
     </div>
     <div class="third-place-box">
@@ -941,7 +1006,8 @@ function decodeScores(s) {
 }
 
 function generateUrl() {
-  const data = { s: encodeScores(), b: bracketPicks };
+  const bs = bracketScores.map(sc => sc[0] === null ? '' : sc[0] + '-' + sc[1]).join(',');
+  const data = { s: encodeScores(), b: bracketPicks, bs };
   const json = JSON.stringify(data);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   return location.href.split('?')[0] + '?p=' + b64;
@@ -956,6 +1022,11 @@ function loadFromUrl() {
     const data = JSON.parse(json);
     if (data.s) { const d = decodeScores(data.s); groupScores = d.scores; groupWdl = d.wdl; }
     if (data.b) bracketPicks = data.b;
+    if (data.bs) bracketScores = data.bs.split(',').map(s => {
+      if (!s) return [null, null];
+      const [a, b] = s.split('-').map(Number);
+      return [isNaN(a) ? null : a, isNaN(b) ? null : b];
+    });
   } catch(e) { console.error('Failed to load state from URL', e); }
 }
 
@@ -983,6 +1054,7 @@ function resetAll() {
     groupWdl[g] = new Array(6).fill(null);
   });
   bracketPicks = new Array(32).fill(null);
+  bracketScores = new Array(32).fill(null).map(() => [null, null]);
   renderGroups();
   renderBracket();
   saveState();
