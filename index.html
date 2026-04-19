@@ -339,6 +339,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 <div id="tab-groups" class="tab-pane active">
   <div class="auto-predict-bar">
     <button class="btn-auto" onclick="autoPredictGroups()">🎲 自動予想</button>
+    <button class="reset-btn" onclick="resetAll()">🔄 予想リセット</button>
   </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">グループをクリックするとスコア入力欄がその場で展開します。<span id="thirdCounter" style="margin-left:6px;">完了グループ 0/12 ・ 3位通過 0/8</span></div>
   <div class="groups-grid" id="groupsGrid"></div>
@@ -347,6 +348,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 <div id="tab-bracket" class="tab-pane">
   <div class="auto-predict-bar">
     <button class="btn-auto" onclick="autoPredictBracket()">🎲 自動予想</button>
+    <button class="reset-btn" onclick="resetAll()">🔄 予想リセット</button>
   </div>
   <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">チームをクリックして勝者を選択。もう一度クリックで解除。</div>
   <div class="bracket-wrap">
@@ -1091,7 +1093,11 @@ function copyUrl() {
 }
 
 function resetAll() {
-  if (!confirm('全ての予想をリセットしますか？')) return;
+  const hasAny = GKEYS.some(g => GROUP_MATCHES[g].some((_, mi) => {
+    const sc = groupScores[g][mi];
+    return (sc[0] !== null && sc[1] !== null) || groupWdl[g][mi] !== null;
+  })) || bracketPicks.some(p => p !== null);
+  if (hasAny && !confirm('全ての予想をリセットしますか？')) return;
   GKEYS.forEach(g => {
     groupScores[g] = new Array(6).fill(null).map(() => [null, null]);
     groupWdl[g] = new Array(6).fill(null);
