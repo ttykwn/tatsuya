@@ -1531,12 +1531,13 @@ function updateXPreview() {
   const el = document.getElementById('xPreview');
   if (!el) return;
   const hashtags = '#FIFAWorldCup2026 #WorldCup2026 #ワールドカップ #W杯 #W杯予想 #サッカー日本代表 #SAMURAIBLUE';
-  el.textContent = buildXPostText() + '\n\n' + hashtags;
+  const baseUrl = location.origin + location.pathname;
+  el.textContent = buildXPostText() + '\n\n' + hashtags + '\n' + baseUrl;
 }
 
 function postToX() {
   const text = buildXPostText();
-  const url = generateUrl();
+  const url = location.origin + location.pathname;
   const hashtags = 'FIFAWorldCup2026,WorldCup2026,ワールドカップ,W杯,W杯予想,サッカー日本代表,SAMURAIBLUE';
   const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
   window.open(intent, '_blank', 'noopener,noreferrer');
