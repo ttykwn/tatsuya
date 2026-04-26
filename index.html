@@ -1853,10 +1853,17 @@ async function downloadBracket(btn) {
       useCORS: true,
       logging: false,
     });
-    const a = document.createElement('a');
-    a.download = 'fifa2026-bracket.png';
-    a.href = canvas.toDataURL('image/png');
-    a.click();
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const file = new File([blob], 'fifa2026-bracket.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'FIFA World Cup 2026 予想トーナメント表' });
+    } else {
+      const a = document.createElement('a');
+      a.download = 'fifa2026-bracket.png';
+      a.href = URL.createObjectURL(blob);
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
   } catch(e) {
     alert('画像の生成に失敗しました。');
   } finally {
