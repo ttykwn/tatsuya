@@ -1821,14 +1821,30 @@ async function downloadBracket(btn) {
     return;
   }
   const bracket = document.getElementById('bracket');
-  if (!bracket) return;
+  const tabBracket = document.getElementById('tab-bracket');
+  if (!bracket || !tabBracket) return;
   const orig = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '⏳ 生成中…';
+
+  // If bracket tab is hidden, reveal it off-screen so html2canvas can measure it
+  const wasActive = tabBracket.classList.contains('active');
+  if (!wasActive) {
+    tabBracket.style.display = 'block';
+    tabBracket.style.position = 'absolute';
+    tabBracket.style.left = '-99999px';
+    tabBracket.style.top = '0';
+  }
+
+  // Reset bracket scale for full-res capture
   const prevTransform = bracket.style.transform;
   const prevOrigin = bracket.style.transformOrigin;
   bracket.style.transform = 'none';
   bracket.style.transformOrigin = '';
+
+  // Wait for layout recalc
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
   try {
     const canvas = await html2canvas(bracket, {
       backgroundColor: '#0f1118',
@@ -1845,6 +1861,12 @@ async function downloadBracket(btn) {
   } finally {
     bracket.style.transform = prevTransform;
     bracket.style.transformOrigin = prevOrigin;
+    if (!wasActive) {
+      tabBracket.style.display = '';
+      tabBracket.style.position = '';
+      tabBracket.style.left = '';
+      tabBracket.style.top = '';
+    }
     btn.disabled = false;
     btn.innerHTML = orig;
   }
