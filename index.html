@@ -1824,60 +1824,63 @@ async function downloadBracket(btn) {
   const bracket = document.getElementById('bracket');
   const tabBracket = document.getElementById('tab-bracket');
   if (!bracket || !tabBracket) return;
+
   const orig = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '⏳ 生成中…';
 
-  // If bracket tab is hidden, reveal it off-screen so html2canvas can measure it
+  // Show bracket tab so html2canvas can render it (brief flash is acceptable)
   const wasActive = tabBracket.classList.contains('active');
-  if (!wasActive) {
-    tabBracket.style.display = 'block';
-    tabBracket.style.position = 'absolute';
-    tabBracket.style.left = '-99999px';
-    tabBracket.style.top = '0';
-  }
+  if (!wasActive) tabBracket.classList.add('active');
 
-  // Reset bracket scale for full-res capture
   const prevTransform = bracket.style.transform;
   const prevOrigin = bracket.style.transformOrigin;
   bracket.style.transform = 'none';
   bracket.style.transformOrigin = '';
 
-  // Wait for layout recalc
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
+  let blob = null;
   try {
+    const scale = window.devicePixelRatio > 1 ? 2 : 1;
     const canvas = await html2canvas(bracket, {
       backgroundColor: '#0f1118',
-      scale: 2,
+      scale,
       useCORS: true,
+      allowTaint: true,
       logging: false,
     });
-    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-    const file = new File([blob], 'fifa2026-bracket.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'FIFA World Cup 2026 予想トーナメント表' });
-    } else {
-      const a = document.createElement('a');
-      a.download = 'fifa2026-bracket.png';
-      a.href = URL.createObjectURL(blob);
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
+    blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
   } catch(e) {
     alert('画像の生成に失敗しました。');
   } finally {
     bracket.style.transform = prevTransform;
     bracket.style.transformOrigin = prevOrigin;
-    if (!wasActive) {
-      tabBracket.style.display = '';
-      tabBracket.style.position = '';
-      tabBracket.style.left = '';
-      tabBracket.style.top = '';
-    }
+    if (!wasActive) tabBracket.classList.remove('active');
     btn.disabled = false;
     btn.innerHTML = orig;
   }
+
+  if (!blob) return;
+
+  const file = new File([blob], 'fifa2026-bracket.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'FIFA World Cup 2026 予想トーナメント表' });
+    } catch(e) {
+      if (e.name !== 'AbortError') saveBlob(blob);
+    }
+  } else {
+    saveBlob(blob);
+  }
+}
+
+function saveBlob(blob) {
+  const a = document.createElement('a');
+  a.download = 'fifa2026-bracket.png';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
