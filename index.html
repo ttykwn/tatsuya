@@ -567,28 +567,32 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 
 .img-overlay {
   position: fixed; inset: 0; z-index: 9999;
-  background: rgba(0,0,0,0.85); padding: 16px;
-  display: flex; align-items: center; justify-content: center;
-  overflow: auto;
-}
-.img-overlay-inner {
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  max-width: 100%;
+  background: rgba(0,0,0,0.92);
+  display: flex; flex-direction: column;
 }
 .img-overlay-hint {
   background: var(--card); color: var(--text);
-  padding: 10px 16px; border-radius: 8px;
-  font-size: 0.85rem; text-align: center;
-  border: 1px solid var(--accent);
+  padding: 10px 16px;
+  font-size: 0.8rem; text-align: center;
+  border-bottom: 1px solid var(--accent);
+  flex-shrink: 0;
+}
+.img-overlay-scroll {
+  flex: 1; overflow: auto;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
 }
 .img-overlay-img {
-  max-width: 100%; height: auto;
+  max-width: none; max-height: none;
+  display: block;
   border-radius: 6px; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
 }
 .img-overlay-close {
   background: var(--card); color: var(--text);
   border: 1px solid var(--border); border-radius: 6px;
-  padding: 8px 20px; font-size: 0.85rem; cursor: pointer;
+  padding: 10px 20px; font-size: 0.85rem; cursor: pointer;
+  margin: 12px auto; flex-shrink: 0;
 }
 </style>
 </head>
@@ -1920,11 +1924,9 @@ function showImageOverlay(blob) {
   const overlay = document.createElement('div');
   overlay.className = 'img-overlay';
   overlay.innerHTML = `
-    <div class="img-overlay-inner">
-      <div class="img-overlay-hint">画像を長押しして「<b>写真に保存</b>」を選択してください</div>
-      <img class="img-overlay-img" src="${url}" alt="トーナメント表">
-      <button class="img-overlay-close">✕ 閉じる</button>
-    </div>`;
+    <div class="img-overlay-hint">画像を長押しして「<b>写真に保存</b>」を選択<br><span style="color:var(--muted);font-size:0.7rem;">スワイプで全体を確認できます</span></div>
+    <div class="img-overlay-scroll"><img class="img-overlay-img" src="${url}" alt="トーナメント表"></div>
+    <button class="img-overlay-close">✕ 閉じる</button>`;
   overlay.addEventListener('click', e => {
     if (e.target === overlay || e.target.classList.contains('img-overlay-close')) {
       URL.revokeObjectURL(url);
