@@ -569,30 +569,27 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   position: fixed; inset: 0; z-index: 9999;
   background: rgba(0,0,0,0.92);
   display: flex; flex-direction: column;
+  padding: 12px;
 }
 .img-overlay-hint {
   background: var(--card); color: var(--text);
-  padding: 10px 16px;
+  padding: 10px 16px; border-radius: 8px;
   font-size: 0.8rem; text-align: center;
-  border-bottom: 1px solid var(--accent);
-  flex-shrink: 0;
-}
-.img-overlay-scroll {
-  flex: 1; overflow: auto;
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
-  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--accent);
+  flex-shrink: 0; margin-bottom: 10px;
 }
 .img-overlay-img {
-  max-width: none; max-height: none;
-  display: block;
-  border-radius: 6px; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  flex: 1; min-height: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
 }
 .img-overlay-close {
   background: var(--card); color: var(--text);
   border: 1px solid var(--border); border-radius: 6px;
   padding: 10px 20px; font-size: 0.85rem; cursor: pointer;
-  margin: 12px auto; flex-shrink: 0;
+  margin-top: 10px; flex-shrink: 0;
+  align-self: center;
 }
 </style>
 </head>
@@ -1872,6 +1869,8 @@ async function downloadBracket(btn) {
 
   let blob = null;
   try {
+    const w = bracket.scrollWidth;
+    const h = bracket.scrollHeight;
     const scale = window.devicePixelRatio > 1 ? 2 : 1;
     const canvas = await html2canvas(bracket, {
       backgroundColor: '#0f1118',
@@ -1879,6 +1878,10 @@ async function downloadBracket(btn) {
       useCORS: true,
       allowTaint: true,
       logging: false,
+      width: w,
+      height: h,
+      windowWidth: w,
+      windowHeight: h,
     });
     blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
   } catch(e) {
@@ -1924,8 +1927,8 @@ function showImageOverlay(blob) {
   const overlay = document.createElement('div');
   overlay.className = 'img-overlay';
   overlay.innerHTML = `
-    <div class="img-overlay-hint">画像を長押しして「<b>写真に保存</b>」を選択<br><span style="color:var(--muted);font-size:0.7rem;">スワイプで全体を確認できます</span></div>
-    <div class="img-overlay-scroll"><img class="img-overlay-img" src="${url}" alt="トーナメント表"></div>
+    <div class="img-overlay-hint">画像を長押しして「<b>写真に保存</b>」を選択してください</div>
+    <img class="img-overlay-img" src="${url}" alt="トーナメント表">
     <button class="img-overlay-close">✕ 閉じる</button>`;
   overlay.addEventListener('click', e => {
     if (e.target === overlay || e.target.classList.contains('img-overlay-close')) {
