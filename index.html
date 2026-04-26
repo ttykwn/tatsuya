@@ -564,6 +564,32 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 @media (max-width: 360px) {
   .sch-venue { display: none; }
 }
+
+.img-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.85); padding: 16px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: auto;
+}
+.img-overlay-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  max-width: 100%;
+}
+.img-overlay-hint {
+  background: var(--card); color: var(--text);
+  padding: 10px 16px; border-radius: 8px;
+  font-size: 0.85rem; text-align: center;
+  border: 1px solid var(--accent);
+}
+.img-overlay-img {
+  max-width: 100%; height: auto;
+  border-radius: 6px; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.img-overlay-close {
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 20px; font-size: 0.85rem; cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -1864,12 +1890,18 @@ async function downloadBracket(btn) {
   if (!blob) return;
 
   const file = new File([blob], 'fifa2026-bracket.png', { type: 'image/png' });
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: 'FIFA World Cup 2026 予想トーナメント表' });
+      return;
     } catch(e) {
-      if (e.name !== 'AbortError') saveBlob(blob);
+      if (e.name === 'AbortError') return;
     }
+  }
+  if (isMobile) {
+    showImageOverlay(blob);
   } else {
     saveBlob(blob);
   }
@@ -1881,6 +1913,25 @@ function saveBlob(blob) {
   a.href = URL.createObjectURL(blob);
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function showImageOverlay(blob) {
+  const url = URL.createObjectURL(blob);
+  const overlay = document.createElement('div');
+  overlay.className = 'img-overlay';
+  overlay.innerHTML = `
+    <div class="img-overlay-inner">
+      <div class="img-overlay-hint">画像を長押しして「<b>写真に保存</b>」を選択してください</div>
+      <img class="img-overlay-img" src="${url}" alt="トーナメント表">
+      <button class="img-overlay-close">✕ 閉じる</button>
+    </div>`;
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay || e.target.classList.contains('img-overlay-close')) {
+      URL.revokeObjectURL(url);
+      overlay.remove();
+    }
+  });
+  document.body.appendChild(overlay);
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
