@@ -653,7 +653,6 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   <div class="tab active" onclick="showTab('groups')">グループステージ</div>
   <div class="tab" onclick="showTab('bracket')">決勝トーナメント</div>
   <div class="tab" onclick="showTab('schedule')">観戦スケジュール</div>
-  <div class="tab" onclick="showTab('infographic')">全試合</div>
   <div class="tab" onclick="showTab('share')">共有</div>
 </nav>
 
@@ -690,13 +689,6 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     <div id="schWatchingList"></div>
   </div>
   <div id="schCalendar"></div>
-</div>
-
-<div id="tab-infographic" class="tab-pane">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-    <button class="btn btn-gold" onclick="downloadInfographic(this)">📥 画像で保存</button>
-  </div>
-  <div id="infogContainer"></div>
 </div>
 
 <div id="tab-share" class="tab-pane">
@@ -1474,13 +1466,12 @@ function showTab(id) {
   document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
-  const tabs = ['groups','bracket','schedule','infographic','share'];
+  const tabs = ['groups','bracket','schedule','share'];
   const i = tabs.indexOf(id);
   document.querySelectorAll('.tab')[i].classList.add('active');
   if (id === 'share') { saveState(); updateXPreview(); }
   if (id === 'bracket') autoScaleBracket();
   if (id === 'schedule') renderSchedule();
-  if (id === 'infographic') renderInfographic();
 }
 
 // ===== AUTO PREDICT =====
