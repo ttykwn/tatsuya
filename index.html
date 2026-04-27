@@ -565,6 +565,55 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   .sch-venue { display: none; }
 }
 
+/* ===== INFOGRAPHIC ===== */
+.infog-wrap { background: #0a0d1a; border-radius: 10px; overflow: hidden; }
+.infog-title {
+  background: linear-gradient(135deg, #141c38, #1e2850);
+  text-align: center; padding: 12px 16px;
+  font-size: 0.9rem; font-weight: 700; color: #fff;
+  border-bottom: 2px solid #c9ab52;
+}
+.infog-subtitle { font-size: 0.6rem; color: rgba(255,255,255,0.55); margin-top: 3px; font-weight: 400; }
+.infog-legend {
+  display: flex; flex-wrap: wrap; gap: 5px 10px;
+  padding: 7px 10px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.infog-legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.5rem; color: var(--muted); }
+.infog-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.infog-date-head {
+  padding: 5px 10px 3px;
+  background: rgba(201,171,82,0.06);
+  color: var(--accent); font-size: 0.6rem; font-weight: 700;
+  border-top: 1px solid rgba(201,171,82,0.15);
+}
+.infog-row {
+  display: grid;
+  grid-template-columns: 30px 1fr 12px 1fr 26px;
+  align-items: center; column-gap: 3px;
+  padding: 2px 8px 2px 11px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-left: 3px solid transparent;
+}
+.infog-time { font-size: 0.53rem; color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+.infog-team1, .infog-team2 {
+  font-size: 0.58rem; color: var(--text);
+  display: flex; align-items: center; gap: 2px; min-width: 0;
+  overflow: hidden;
+}
+.infog-team2 { justify-content: flex-end; }
+.infog-tname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.infog-vs { font-size: 0.4rem; color: var(--muted); text-align: center; }
+.infog-badge {
+  font-size: 0.42rem; font-weight: 700; color: #fff;
+  padding: 1px 3px; border-radius: 2px; text-align: center; white-space: nowrap;
+}
+.infog-footer {
+  text-align: center; font-size: 0.5rem; color: var(--muted);
+  padding: 8px; border-top: 1px solid rgba(255,255,255,0.05);
+}
+
 .img-overlay {
   position: fixed; inset: 0; z-index: 9999;
   background: rgba(0,0,0,0.92);
@@ -604,6 +653,7 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
   <div class="tab active" onclick="showTab('groups')">グループステージ</div>
   <div class="tab" onclick="showTab('bracket')">決勝トーナメント</div>
   <div class="tab" onclick="showTab('schedule')">観戦スケジュール</div>
+  <div class="tab" onclick="showTab('infographic')">全試合</div>
   <div class="tab" onclick="showTab('share')">共有</div>
 </nav>
 
@@ -640,6 +690,13 @@ header p { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     <div id="schWatchingList"></div>
   </div>
   <div id="schCalendar"></div>
+</div>
+
+<div id="tab-infographic" class="tab-pane">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+    <button class="btn btn-gold" onclick="downloadInfographic(this)">📥 画像で保存</button>
+  </div>
+  <div id="infogContainer"></div>
 </div>
 
 <div id="tab-share" class="tab-pane">
@@ -1417,12 +1474,13 @@ function showTab(id) {
   document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
-  const tabs = ['groups','bracket','schedule','share'];
+  const tabs = ['groups','bracket','schedule','infographic','share'];
   const i = tabs.indexOf(id);
   document.querySelectorAll('.tab')[i].classList.add('active');
   if (id === 'share') { saveState(); updateXPreview(); }
   if (id === 'bracket') autoScaleBracket();
   if (id === 'schedule') renderSchedule();
+  if (id === 'infographic') renderInfographic();
 }
 
 // ===== AUTO PREDICT =====
@@ -1842,6 +1900,109 @@ function renderSchedule() {
 loadFromUrl();
 renderGroups();
 renderBracket();
+
+// ===== INFOGRAPHIC =====
+const INFOG_COLORS = {
+  A:'#e05050', B:'#e08030', C:'#d4b020', D:'#40a840',
+  E:'#18a890', F:'#3888d0', G:'#7840c8', H:'#c04090',
+  I:'#cc3838', J:'#cc6828', K:'#bca018', L:'#389038'
+};
+const INFOG_ROUND_COLORS = {
+  'ラウンド32':'#5070b8','ラウンド16':'#5888c8',
+  '準々決勝':'#60a0d8','準決勝':'#70b8e8',
+  '決勝':'#c9ab52','3位決定戦':'#8090a8'
+};
+const ROUND_ABBR_IG = {
+  'ラウンド32':'R32','ラウンド16':'R16',
+  '準々決勝':'QF','準決勝':'SF','決勝':'FINAL','3位決定戦':'3位'
+};
+
+function renderInfographic() {
+  const all = getAllMatches();
+  const byDate = new Map();
+  all.forEach(m => {
+    const key = dateKey(m.date);
+    if (!byDate.has(key)) byDate.set(key, { date: m.date, matches: [] });
+    byDate.get(key).matches.push(m);
+  });
+  const sorted = [...byDate.values()].sort((a,b) => dateKey(a.date)-dateKey(b.date));
+  sorted.forEach(d => d.matches.sort((a,b) => timeKey(a.jst)-timeKey(b.jst)));
+
+  function getColor(m) {
+    if (m.roundType === 'group') return INFOG_COLORS[m.round.charAt(0)] || '#888';
+    return INFOG_ROUND_COLORS[m.round.split(' ')[0]] || '#668';
+  }
+  function getBadge(m) {
+    if (m.roundType === 'group') return m.round.charAt(0);
+    return ROUND_ABBR_IG[m.round.split(' ')[0]] || '';
+  }
+
+  const legendGroups = Object.entries(INFOG_COLORS).map(([g,c]) =>
+    `<span class="infog-legend-item"><span class="infog-legend-dot" style="background:${c}"></span>${g}</span>`
+  ).join('');
+  const legendRounds = Object.entries(INFOG_ROUND_COLORS).map(([r,c]) =>
+    `<span class="infog-legend-item"><span class="infog-legend-dot" style="background:${c}"></span>${ROUND_ABBR_IG[r]}</span>`
+  ).join('');
+
+  const dateRows = sorted.map(d => {
+    const ms = d.matches.map(m => {
+      const c = getColor(m);
+      return `<div class="infog-row" style="border-left-color:${c}">
+        <span class="infog-time">${m.jst}</span>
+        <span class="infog-team1"><span>${m.team1.flag}</span><span class="infog-tname">${m.team1.text}</span></span>
+        <span class="infog-vs">vs</span>
+        <span class="infog-team2"><span class="infog-tname">${m.team2.text}</span><span>${m.team2.flag}</span></span>
+        <span class="infog-badge" style="background:${c}">${getBadge(m)}</span>
+      </div>`;
+    }).join('');
+    return `<div><div class="infog-date-head">${d.date}</div>${ms}</div>`;
+  }).join('');
+
+  document.getElementById('infogContainer').innerHTML = `
+    <div class="infog-wrap" id="infogWrap">
+      <div class="infog-title">⚽ FIFA World Cup 2026<div class="infog-subtitle">全試合スケジュール（日本時間 JST）</div></div>
+      <div class="infog-legend">${legendGroups}${legendRounds}</div>
+      ${dateRows}
+      <div class="infog-footer">時間はすべて日本時間（JST）</div>
+    </div>`;
+}
+
+async function downloadInfographic(btn) {
+  if (typeof html2canvas === 'undefined') {
+    alert('ライブラリの読み込み中です。しばらくしてから再試行してください。');
+    return;
+  }
+  const wrap = document.getElementById('infogWrap');
+  if (!wrap) return;
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ 生成中…';
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  let blob = null;
+  try {
+    const scale = window.devicePixelRatio > 1 ? 2 : 1;
+    const canvas = await html2canvas(wrap, {
+      backgroundColor: '#0a0d1a', scale,
+      useCORS: true, allowTaint: true, logging: false,
+      width: wrap.offsetWidth, height: wrap.scrollHeight,
+      windowWidth: wrap.offsetWidth,
+    });
+    blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+  } catch(e) {
+    alert('画像の生成に失敗しました。');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+  if (!blob) return;
+  const file = new File([blob], 'fifa2026-schedule.png', { type: 'image/png' });
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'FIFA World Cup 2026 全試合スケジュール' }); return; }
+    catch(e) { if (e.name === 'AbortError') return; }
+  }
+  if (isMobile) { showImageOverlay(blob); } else { saveBlob(blob); }
+}
 
 async function downloadBracket(btn) {
   if (typeof html2canvas === 'undefined') {
