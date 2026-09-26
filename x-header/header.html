@@ -2,86 +2,69 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#142b33; --muted:#586c73; --accent:#166651; --paper:#f7f5ee; --panel:#e6ede6; --line:#cfdcd6; }
+  /* palette sampled from the のらたつ icon */
+  :root { --paper:#fcf8ea; --ink:#1d1d1b; --gray:#aca7a1; --green:#3c4c39; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { width:1500px; height:500px; overflow:hidden; font-family:"Noto Sans JP",sans-serif; }
-  .hdr { position:relative; width:1500px; height:500px; overflow:hidden; background:var(--paper); }
-  .v-dark { --paper:#15332d; --panel:#1d4038; --ink:#f4f1e6; --muted:#b9c9c2; --accent:#9fd3b3; --line:#2f5a4f; }
-
-  /* right panel with diagonal edge, echoing the site's OG image */
-  .panel { position:absolute; inset:0 0 0 auto; width:640px; background:var(--panel);
-           clip-path:polygon(18% 0,100% 0,100% 100%,0 100%); }
-
-  /* text block: kept right of the avatar zone (bottom-left) and inside the vertical safe area */
-  .copy { position:absolute; left:400px; top:74px; width:520px; }
-  .brand { display:flex; align-items:center; gap:12px; font-family:Inter,sans-serif; font-weight:600;
-           font-size:22px; letter-spacing:.14em; color:var(--accent); }
-  .brand img { width:34px; height:34px; border-radius:7px; }
-  h1 { margin-top:22px; font-size:56px; line-height:1.28; font-weight:800; color:var(--ink); letter-spacing:.02em; }
-  .sub { margin-top:16px; font-size:21px; line-height:1.6; font-weight:500; color:var(--muted); }
-  .chips { margin-top:18px; display:flex; gap:10px; }
-  .chip { padding:7px 16px; border-radius:999px; font-size:18px; font-weight:700; color:var(--accent);
-          border:2px solid var(--accent); background:transparent; }
-  .url { position:absolute; right:56px; bottom:78px; font-family:Inter,sans-serif; font-weight:600;
-         font-size:20px; letter-spacing:.06em; color:var(--muted); }
-
-  /* line-art desk scene */
-  .art { position:absolute; right:40px; top:60px; width:560px; height:360px; }
-  .art * { vector-effect:non-scaling-stroke; }
+  body { width:1500px; height:500px; overflow:hidden; background:var(--paper); }
+  svg { display:block; }
+  .tag { font-family:"Zen Maru Gothic",sans-serif; font-weight:700; font-size:34px; letter-spacing:.08em; fill:var(--ink); }
 </style>
 </head>
 <body>
-<div class="hdr VARIANT">
-  <div class="panel"></div>
+<svg width="1500" height="500" viewBox="0 0 1500 500">
+  <defs>
+    <!-- slight hand-drawn wobble, like the icon's line -->
+    <filter id="hand" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="3.2"/>
+    </filter>
+    <!-- faint paper grain -->
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="2"/>
+      <feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.40  0 0 0 0 0.30  0 0 0 0.06 0"/>
+    </filter>
+  </defs>
 
-  <div class="copy">
-    <div class="brand"><img src="logo.png" alt="">NORRA OFFICE</div>
-    <h1>好きなことに、<br>もっと時間を。</h1>
-    <p class="sub">仕事がラクになるガジェットとAIツールを、<br>使う場面で比べて、わかりやすく紹介。</p>
-    <div class="chips"><span class="chip">ガジェット比較</span><span class="chip">AIツール</span><span class="chip">仕事の自動化</span></div>
-  </div>
+  <rect width="1500" height="500" fill="var(--paper)"/>
+  <rect width="1500" height="500" filter="url(#grain)"/>
 
-  <svg class="art" viewBox="0 0 560 360" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <g stroke="var(--ink)" stroke-width="3.2">
-      <!-- desk -->
-      <path d="M40 300 H540"/>
-      <!-- laptop on a stand -->
-      <path d="M170 110 L330 110 L330 222 L170 222 Z" fill="var(--paper)"/>
-      <path d="M186 126 H314 V206 H186 Z" stroke-width="2.2"/>
-      <path d="M150 240 L350 240 L330 222 L170 222 Z" fill="var(--paper)"/>
-      <!-- stand -->
-      <path d="M200 240 L232 300 M300 240 L268 300" stroke="var(--accent)" stroke-width="4"/>
-      <!-- screen content: simple flow (automation) -->
-      <g stroke="var(--accent)" stroke-width="2.4">
-        <rect x="200" y="148" width="26" height="20" rx="4"/>
-        <rect x="274" y="148" width="26" height="20" rx="4"/>
-        <path d="M226 158 H274" stroke-dasharray="5 5"/>
-        <path d="M204 184 H296 M204 194 H262" stroke="var(--muted)"/>
-      </g>
-      <!-- phone on a stand -->
-      <path d="M400 170 h54 a8 8 0 0 1 8 8 v98 a8 8 0 0 1 -8 8 h-54 a8 8 0 0 1 -8 -8 v-98 a8 8 0 0 1 8 -8 z" fill="var(--paper)"/>
-      <path d="M418 180 H436"/>
-      <path d="M404 284 L396 300 M450 284 L466 300" stroke="var(--accent)" stroke-width="4"/>
-      <!-- charger + cable -->
-      <path d="M470 254 h34 v34 h-34 z" fill="var(--paper)"/>
-      <path d="M480 254 v-10 M494 254 v-10"/>
-      <path d="M470 280 C452 302, 430 302, 427 285" stroke="var(--accent)" stroke-width="3"/>
-      <!-- mug -->
-      <path d="M78 246 h44 v40 a10 10 0 0 1 -10 10 h-24 a10 10 0 0 1 -10 -10 z" fill="var(--paper)"/>
-      <path d="M122 256 h8 a10 10 0 0 1 0 20 h-8"/>
-      <path d="M92 230 c-6 -8 6 -12 0 -20 M106 230 c-6 -8 6 -12 0 -20" stroke="var(--muted)" stroke-width="2.4"/>
-      <!-- sparkles: "time freed up" -->
-      <g stroke="var(--accent)" stroke-width="2.6">
-        <path d="M120 120 v18 M111 129 h18"/>
-        <path d="M388 92 v14 M381 99 h14"/>
-        <path d="M470 150 v10 M465 155 h10"/>
-      </g>
-    </g>
-  </svg>
+  <!-- tagline: the only text -->
+  <text class="tag" x="455" y="122">好きなことに、もっと時間を。</text>
 
-  <div class="url">norraoffice.com</div>
-</div>
+  <g filter="url(#hand)" stroke="var(--ink)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- wall clock ("time") -->
+    <circle cx="1300" cy="140" r="54" fill="var(--gray)"/>
+    <path d="M1300 140 V108 M1300 140 L1322 152" stroke-width="6"/>
+
+    <!-- plant -->
+    <path d="M560 300 C520 250, 520 210, 548 186 C566 222, 570 262, 560 300 Z" fill="var(--green)"/>
+    <path d="M572 300 C600 244, 636 226, 664 230 C650 270, 618 294, 572 300 Z" fill="var(--green)"/>
+    <path d="M566 300 C548 262, 504 250, 478 258 C492 290, 530 304, 566 300 Z" fill="var(--green)"/>
+    <path d="M522 300 H612 L600 380 H534 Z" fill="var(--gray)"/>
+
+    <!-- laptop on a stand -->
+    <path d="M700 168 H930 V300 H700 Z" fill="var(--paper)"/>
+    <path d="M740 212 H800 M740 240 H860 M740 266 H830" stroke-width="5.5" stroke="var(--gray)"/>
+    <path d="M670 300 H960 L946 318 H684 Z" fill="var(--gray)"/>
+    <path d="M740 318 L770 380 M890 318 L860 380"/>
+
+    <!-- mug with steam -->
+    <path d="M1010 318 H1076 V366 C1076 376 1070 382 1060 382 H1026 C1016 382 1010 376 1010 366 Z" fill="var(--green)"/>
+    <path d="M1076 332 C1102 332 1102 362 1076 362" fill="none"/>
+    <path d="M1030 300 C1020 288 1040 280 1030 266 M1056 300 C1046 288 1066 280 1056 266" fill="none" stroke-width="5"/>
+
+    <!-- phone on a small stand + cable -->
+    <path d="M1176 246 H1230 C1236 246 1240 250 1240 256 V356 C1240 362 1236 366 1230 366 H1176 C1170 366 1166 362 1166 356 V256 C1166 250 1170 246 1176 246 Z" fill="var(--paper)"/>
+    <path d="M1190 262 H1216" stroke-width="5"/>
+    <path d="M1178 366 L1168 380 M1228 366 L1240 380"/>
+    <path d="M1203 366 C1206 392, 1260 392, 1290 380 C1310 372, 1330 372, 1344 380" fill="none" stroke-width="5"/>
+
+    <!-- desk -->
+    <path d="M440 381 C700 378, 1100 384, 1440 380" fill="none"/>
+  </g>
+</svg>
 </body>
 </html>
