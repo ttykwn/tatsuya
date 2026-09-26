@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="430 60 1030 340" width="1030" height="340">
+    <defs>
+      <filter id="nh-hand" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/>
+        <feDisplacementMap in="SourceGraphic" scale="3.2"/>
+      </filter>
+    </defs>
+  <g filter="url(#nh-hand)" stroke="#1d1d1b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- wall clock ("time") -->
+    <circle cx="1300" cy="140" r="54" fill="#aca7a1"/>
+    <path d="M1300 140 V108 M1300 140 L1322 152" stroke-width="6"/>
+
+    <!-- plant -->
+    <path d="M560 300 C520 250, 520 210, 548 186 C566 222, 570 262, 560 300 Z" fill="#3c4c39"/>
+    <path d="M572 300 C600 244, 636 226, 664 230 C650 270, 618 294, 572 300 Z" fill="#3c4c39"/>
+    <path d="M566 300 C548 262, 504 250, 478 258 C492 290, 530 304, 566 300 Z" fill="#3c4c39"/>
+    <path d="M522 300 H612 L600 380 H534 Z" fill="#aca7a1"/>
+
+    <!-- laptop on a stand -->
+    <path d="M700 168 H930 V300 H700 Z" fill="#fcf8ea"/>
+    <path d="M740 212 H800 M740 240 H860 M740 266 H830" stroke-width="5.5" stroke="#aca7a1"/>
+    <path d="M670 300 H960 L946 318 H684 Z" fill="#aca7a1"/>
+    <path d="M740 318 L770 380 M890 318 L860 380"/>
+
+    <!-- mug with steam -->
+    <path d="M1010 318 H1076 V366 C1076 376 1070 382 1060 382 H1026 C1016 382 1010 376 1010 366 Z" fill="#3c4c39"/>
+    <path d="M1076 332 C1102 332 1102 362 1076 362" fill="none"/>
+    <path d="M1030 300 C1020 288 1040 280 1030 266 M1056 300 C1046 288 1066 280 1056 266" fill="none" stroke-width="5"/>
+
+    <!-- phone on a small stand + cable -->
+    <path d="M1176 246 H1230 C1236 246 1240 250 1240 256 V356 C1240 362 1236 366 1230 366 H1176 C1170 366 1166 362 1166 356 V256 C1166 250 1170 246 1176 246 Z" fill="#fcf8ea"/>
+    <path d="M1190 262 H1216" stroke-width="5"/>
+    <path d="M1178 366 L1168 380 M1228 366 L1240 380"/>
+    <path d="M1203 366 C1206 392, 1260 392, 1290 380 C1310 372, 1330 372, 1344 380" fill="none" stroke-width="5"/>
+
+    <!-- desk -->
+    <path d="M440 381 C700 378, 1100 384, 1440 380" fill="none"/>
+  </g>
+  </svg>

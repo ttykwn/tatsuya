@@ -1,0 +1,22 @@
+<!-- Norra Office home hero: (image-file version; upload hero-desk.svg or hero-desk.png to the site root) replaces p.eyebrow + h1 + p.home-intro at the top of <main> -->
+<section class="nh-hero" aria-labelledby="nh-title">
+  <div class="nh-copy">
+    <p class="eyebrow">NORRA OFFICE</p>
+    <h1 id="nh-title"><span>好きなことに、</span><span>もっと時間を。</span></h1>
+    <p class="nh-intro">仕事と暮らしに役立つAIツール・ガジェットを紹介。</p>
+  </div>
+  <img class="nh-art" src="/hero-desk.svg" width="1030" height="340" alt="" decoding="async">
+</section>
+<style>
+.nh-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:center;gap:32px;
+  margin:8px 0 36px;padding:36px 40px;background:#fcf8ea;border:1px solid #ece5cf;border-radius:22px}
+.nh-hero .eyebrow{margin:0 0 10px}
+.nh-hero h1{margin:0;line-height:1.35}
+.nh-hero h1 span{display:inline-block}
+.nh-intro{margin:14px 0 0;color:#59645e;font-size:15px;letter-spacing:.04em;line-height:1.9}
+.nh-art{width:100%;height:auto;max-height:240px}
+@media (max-width:720px){
+  .nh-hero{grid-template-columns:1fr;gap:10px;padding:24px 20px 18px;margin:4px 0 28px;border-radius:18px}
+  .nh-art{max-height:150px}
+}
+</style>
